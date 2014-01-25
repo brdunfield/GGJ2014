@@ -18,6 +18,47 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     else return this.generateStraight(lastPoint);
 };
 
+chunkGenerator.prototype.generatePlatform = function(startPoint) {
+    var points = [];
+    var width = Math.random() * 300 + 100;
+    points.push({'x': startPoint.x, 
+                 'y': startPoint.y,
+                 'damage': false });
+    points.push({'x': startPoint.x, 
+                 'y': startPoint.y - 50,
+                 'damage': false });
+    points.push({'x': startPoint.x + width, 
+                 'y': startPoint.y - 50,
+                 'damage': false });
+    points.push({'x': startPoint.x + width, 
+                 'y': startPoint.y,
+                 'damage': false });
+    points.push({'x': startPoint.x, 
+                 'y': startPoint.y,
+                 'damage': false });
+    
+    return points;
+};
+
+chunkGenerator.prototype.generateFork = function(startPoint) {
+    console.log("Generating Fork");
+    var points = [];
+    
+    points.push({'x': startPoint.x, 
+                 'y': startPoint.y - 200,
+                 'damage': false });
+    points.push({'x': startPoint.x + 500, 
+                 'y': startPoint.y - 200,
+                 'damage': false });
+    points.push({'x': startPoint.x + 500, 
+                 'y': startPoint.y - 400,
+                 'damage': false });
+    points.push({'x': startPoint.x + 1000, 
+                 'y': startPoint.y - 400,
+                 'damage': false });
+    return points;
+};
+
 //make mountain from last point
 chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
     console.log("Generating Mountain");
