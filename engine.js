@@ -113,7 +113,7 @@ Engine.prototype.animate = function(time) {
     
     //update character and enemies
     this.char.update(time, this.generator);
-    this.enemies.update(this.speed * timeSinceLastFrame * -0.001, time, this.generator);
+    this.enemies.update(time, this.generator);
     
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~
     context.clearRect(0, 0, getWidth(), getHeight());
@@ -212,30 +212,36 @@ Engine.prototype.animate = function(time) {
 
 Engine.prototype.translateWorld = function(t) {
     var d = new Date();
-    this.speed = this.speed + t/1000;
+    this.speed = this.speed + t * 0.001;
+    
     if (this.char.falling)
         this.char.jumpV = this.char.jumpV - (t*this.gravity/1000);
+    
+    //find what we're translating by
+    var dX = -this.speed * t * 0.001,
+        dY = 0;
+    if (this.char.falling) {
+        dY = this.char.jumpV;
+    }
+    else if (this.char.climbBy) {
+        dY = -this.char.climbBy;
+    }
+
+    
     // translate world according to speed / falling speed
     for (var i = 0; i < this.worldCoords.length; i++) {
         // x
-        this.worldCoords[i].x -= this.speed*t/1000;
+        this.worldCoords[i].x += dX;
         // y
-        if (this.char.falling) {
-            this.worldCoords[i].y += this.char.jumpV;
-        }
-        else if (this.char.climbBy) {
-            this.worldCoords[i].y -= this.char.climbBy;
-        }
+        this.worldCoords[i].y += dY;
     }
     // translate colorPickup
     if (this.colorPickup) {
-        this.colorPickup.x -= this.speed*t/1000;
-        
-        if (this.char.falling)
-            this.colorPickup.y += this.char.jumpV;
-        else if (this.char.climbBy)
-            this.colorPickup.y -= this.char.climbBy;
+        this.colorPickup.x += dX;
+        this.colorPickup.y += dY;
     }
+    //translate enemies
+    this.enemies.translate(dX, dY);
 };
 
 Engine.prototype.updateWorld = function() {

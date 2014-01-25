@@ -20,7 +20,7 @@ Enemies.prototype.spawn = function(x, y, generator)
 //deltaX -> world scroll amount for this step
 //totalMS -> total program running time in milliseconds
 //generator -> instance of generator class
-Enemies.prototype.update = function(deltaX, totalMS, generator)
+Enemies.prototype.update = function(totalMS, generator)
 {
     var e;
     for(var i = this.list.length-1; i >= 0; --i)
@@ -34,7 +34,6 @@ Enemies.prototype.update = function(deltaX, totalMS, generator)
         }
         
         e.update(totalMS + e.seed, generator);
-        e.x += deltaX;
     }
 }
 
@@ -45,5 +44,15 @@ Enemies.prototype.render = function(context)
     for(i in this.list)
     {
         this.list[i].render(context);
+    }
+}
+
+//translate all enemies by given value
+Enemies.prototype.translate = function(x, y)
+{
+    for(i in this.list)
+    {
+        this.list[i].x += x;
+        this.list[i].y += y;
     }
 }
