@@ -1,6 +1,6 @@
 //w (optional) -> the width of the character
 //h (optional) -> the height of the character
-var Character = function(w, h) {
+var Character = function(w, h, hue) {
     this.y = getHeight() /2;
     this.x = 100;
     
@@ -12,6 +12,8 @@ var Character = function(w, h) {
         this.h = 100;
     else 
         this.h = h;
+    
+    this.hue = hue;
     
     this.jumpV = 1;
     this.falling = null;
@@ -39,19 +41,21 @@ Character.prototype.jump = function() {
 };
 
 Character.prototype.attack = function(context) {
-    this.projectiles.push(new particleEmitter(context, [this.x,this.y], [25,0], [5,5], [0,0,0], 4, 20, 5));
+    this.projectiles.push(new particleEmitter(context, "rect",[this.x,this.y], [25,0], [5,5], this.hue, [4,4], 20, 5));
 };
 
 Character.prototype.defend = function(context){
-    this.shields.push(new particleEmitter(context, [this.x,this.y], [0,0], [5,5], [0,0,0], 50, 20, 5));
+    this.shields.push(new particleEmitter(context, "ellipse", [this.x,this.y], [0,0], [5,5], this.hue, [80,80], 20, 5));
 };
-
 
 Character.prototype.update = function(totalMS, generator)
 {
     this.offsetBack = generator.getNoise( totalMS / 2000 );
     this.offsetFront = generator.getNoise( (totalMS + 50000) / 2100 );
     this.offsetMain = generator.getNoise( (totalMS + 50000) / 2100 );
+    
+    //check for collisions with enemies
+    
 }
 
 // ?

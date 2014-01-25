@@ -14,7 +14,7 @@ Generator.prototype.generateCharacter = function(size, hue)
         hue = Math.min( 360, Math.max( 0, hue ) );
     
     //create charater
-    var char = new Character(size, size);
+    var char = new Character(size, size, hue);
     
     //create three levels of canvas
     var imgBack = document.createElement('canvas'),
