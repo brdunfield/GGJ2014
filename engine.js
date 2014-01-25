@@ -201,7 +201,8 @@ Engine.prototype.animate = function(time) {
     
     // UI ~~~~~~~~~~~~~~~~~~~
     this.drawUI(context);
-    
+    var fps = Math.round(1000 / timeSinceLastFrame);
+    context.fillText(fps, getWidth() - 100, 100);
     
     // call next frame
     this.lastTime = time;
