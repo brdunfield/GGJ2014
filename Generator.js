@@ -161,10 +161,12 @@ Generator.prototype.generateCharacter = function(size, hue)
 //w -> width
 //h -> height
 //blockSize -> number of screen pixels per color block
+//widthOffset (optional) -> use to offset noise x values by factor of width
 //noise detail (optional) -> smaller is smoother noise
-Generator.prototype.generateBackground = function (w, h, blockSize, noiseDetail)
+Generator.prototype.generateBackground = function (w, h, blockSize, widthOffset, noiseDetail)
 {
     if( typeof(noiseDetail) == 'undefined' ) noiseDetail = 0.05;
+    if( typeof(widthOffset) == 'undefined' ) widthOffset = 0;
     img = new SeparatedImage(w, h);
     
     //get drawing contexts for each image
@@ -186,9 +188,9 @@ Generator.prototype.generateBackground = function (w, h, blockSize, noiseDetail)
     {
         for(var pX = 0; pX < w; pX += blockSize)
         {
-            r = 75 + 150 * this.getNoise( pX * 0.01, pY * 0.01 );
-            g = 75 + 150 * this.getNoise( pX * 0.01 + 1000, pY * 0.01 + 1000 );
-            b = 75 + 150 * this.getNoise( pX * 0.01 + 2000, pY * 0.01 + 2000 );
+            r = 100 + 100 * this.getNoise( (widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
+            g = 50 + 100 * this.getNoise( (1000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
+            b = 100 + 100 * this.getNoise( (2000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
             
             //do pixelsize x pixelsize
             for(var oY = 0; oY < blockSize; oY++)

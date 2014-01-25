@@ -3,16 +3,23 @@ Math.twoPI = Math.PI * 2;
 var Engine = function(canvasID) {
     var self = this,
         canvas = document.getElementById(canvasID);
+    
     canvas.width = getWidth();
     canvas.height = getHeight();
     this.context = canvas.getContext('2d');
     
+    //useful stuff
+    this.generator = new Generator();
+    
+    //graphics 
+    this.offsetForeground = 0;
+    this.numScrolls = 1;
+    this.imgForeground = this.generator.generateBackground(canvas.width, canvas.height, 30, 0, 0.05);
+    this.imgForegroundNext = this.generator.generateBackground(canvas.width, canvas.height, 30, 1, 0.05);
+    
     // time
     this.startTime = 0;
     this.lastTime = 0;
-    
-    //useful stuff
-    this.generator = new Generator();
     
     // physics
     this.speed = 500; // px/s
@@ -82,6 +89,21 @@ Engine.prototype.animate = function(time) {
     this.r = Math.max(0, this.r - this.colourDecay[0] * timeSinceLastFrame/1000);
     this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame/1000);
     this.b = Math.max(0, this.b - this.colourDecay[2] * timeSinceLastFrame/1000);
+    
+    //update images with colors
+    var r = this.r / 255,
+        g = this.g / 255,
+        b = this.b / 255;
+    this.imgForeground.blend(r * r, g * g, b * b);
+    this.imgForegroundNext.blend(r * r, g * g, b * b);
+    //image positions
+    this.offsetForeground -= this.speed * timeSinceLastFrame * 0.001;
+    if(this.offsetForeground <= -context.canvas.width)
+    {
+        this.offsetForeground = 0;
+        this.imgForeground = this.imgForegroundNext;
+        this.imgForegroundNext = this.generator.generateBackground(this.imgForeground.w, this.imgForeground.h, 30, ++this.numScrolls, 0.05);
+    }
     
     //update character
     this.char.update(time, this.generator);
