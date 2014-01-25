@@ -54,6 +54,10 @@ Engine.prototype.animate = function(time) {
     context.strokeStyle = 'black';
     context.stroke();
     
+    //particle emitter
+    var pEmitter = new particleEmitter(context, new Array(300,300), new Array(0,0), new Array(255,0,0));
+    pEmitter.run();
+    
     // character
     this.char.render(context);
     
