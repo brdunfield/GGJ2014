@@ -10,17 +10,16 @@ var Engine = function(canvasID) {
     
     // variables
     this.speed = 500; // px/s
-    this.gravity = 50; //px/s
-    // this.difficulty
-    // this.points;
-    // this.colour;
+    this.gravity = 100; //px/s/s
+    this.distance = 0;
     this.char = new Character();
+    
+    this.colourDecay = [1, 1, 1]; // per second
     
     this.worldCoords = [[0, getHeight()/2], [200, getHeight()/2]];
     this.platformCoords = [];  
-    this.tx = 0;
-    this.ty = 0;
     
+    // Jump handler
     window.addEventListener('keydown', function(e) {
         if (e.keyCode == 32) {
             self.char.jump();
@@ -43,6 +42,8 @@ Engine.prototype.animate = function(time) {
     var timeSinceLastFrame = time - this.lastTime;
     
     // Update
+    this.distance += (this.speed/200 * timeSinceLastFrame / 1000);
+    //console.log(Math.round(this.distance));
     this.updateWorld();
     this.translateWorld(timeSinceLastFrame);
     
@@ -65,6 +66,10 @@ Engine.prototype.animate = function(time) {
     // character
     this.char.render(context);
     
+    // UI
+    context.font = "30px Arial";
+    context.fillText(Math.round(this.distance) + "m", getWidth() - 100, 40);
+    
     
     // call next frame
     this.lastTime = time;
@@ -82,11 +87,7 @@ Engine.prototype.translateWorld = function(t) {
         // x
         this.worldCoords[i][0] -= this.speed*t/1000;
         // y
-        if (this.char.isJumping) {
-            this.char.jumpV = this.char.jumpV - (t*this.gravity/1000);
-            this.worldCoords[i][1] += this.char.jumpV;
-        }
-        else if (this.char.falling) {
+        if (this.char.falling) {
             this.char.jumpV = this.char.jumpV - (t*this.gravity/1000);
             this.worldCoords[i][1] += this.char.jumpV;
         }
@@ -111,19 +112,17 @@ Engine.prototype.translateWorld = function(t) {
     var slope = (rightPt[1] - leftPt[1]) / (rightPt[0] - leftPt[0]);
     var dx = this.char.x - leftPt[0];
     //console.log("slope: " + slope);
-    if ((slope*dx + leftPt[1]) > this.char.y && !this.char.jumping) {
+    if ((slope*dx + leftPt[1]) > this.char.y && !this.char.falling) {
         //console.log("Char needs to fall now");
-        this.char.falling = d.getTime();
+        this.char.falling = true;
         this.char.jumpV = 0;
         this.char.climbBy = null;
     } else if((slope*dx + leftPt[1]) < this.char.y) {
         this.char.climbBy = (slope*dx + leftPt[1]) - this.char.y;
         this.char.falling = null;
-        this.char.isJumping = null;
     } else {
         this.char.falling = false;
         this.char.climbBy = null;
-        this.char.isJumping = false;
     }
 };
 
@@ -138,7 +137,7 @@ Engine.prototype.updateWorld = function() {
         this.worldCoords.push([lastCoord[0] + Math.random()*300 + 200, lastCoord[1] - (Math.random()*200 - 100)]);    
 };
 
-/* ~~ Helper Functions */
+/* ~~ Helper Functions ~~ */
 function getWidth() {
     if (self.innerWidth) {
        return self.innerWidth;
