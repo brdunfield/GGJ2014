@@ -3,12 +3,15 @@ var Character = function() {
     this.x = 75;
     
     this.isJumping = null;
+    this.jumpV = 1;
     this.falling = null;
     this.climbBy = null;
 };
 
 Character.prototype.jump = function() {
-    
+    var d = new Date();
+    this.isJumping = d.getTime();
+    this.jumpV = 50;
 };
 
 Character.prototype.attack = function() {
