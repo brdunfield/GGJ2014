@@ -35,6 +35,7 @@ var Engine = function(canvasID) {
     this.b = Math.random() * 100 + 50;
     
     this.timeSinceLastColor = 0;
+    this.timeSinceLastParticle = 0;
     this.timeSinceLastDamage = 0;
     this.colorPickup = null;
     
@@ -74,6 +75,7 @@ Engine.prototype.animate = function(time) {
     var timeSinceLastFrame = time - this.lastTime;
     this.timeSinceLastColor += timeSinceLastFrame;
     this.timeSinceLastDamage += timeSinceLastFrame;
+    
     // Update ~~~~~~~~~~~~~~~~~~~
     this.distance += (this.speed * timeSinceLastFrame / 1000) / 500; // divide by initial speed as if it were a meter
     //console.log(Math.round(this.distance));
@@ -149,7 +151,35 @@ Engine.prototype.animate = function(time) {
     if (this.colorPickup) { this.colorPickup.render(context); }
     
     //particle emitter stuff
-    this.pEmitter.run(this.lastTime);
+    //character projectiles
+    this.timeSinceLastParticle += timeSinceLastFrame;
+    if(this.char.projectiles.length !=0 && this.timeSinceLastParticle >= 1000/this.char.projectiles[0].rate){
+        for(var i = 0; i < this.char.projectiles.length; i++){
+            this.char.projectiles[i].makeParticle();
+        };
+        this.timeSinceLastParticle = 0;
+    };
+    this.char.projectiles.forEach(function(each){
+        each.run();
+    });
+    
+    //character shield particles
+    if(this.char.shields.length !=0 && this.timeSinceLastParticle >= 1000/this.char.shields[0].rate){
+        for(var i = 0; i < this.char.shields.length; i++){
+            this.char.shields[i].makeParticle();
+        };
+        this.timeSinceLastParticle = 0;
+    };
+    this.char.shields.forEach(function(each){
+        each.run();
+    });
+    
+    //remove character particles as they go off screen
+    for(var i = this.char.projectiles.length-1; i >= 0; i--){
+        if(this.char.projectiles[i].position[0] >= window.getWidth() + 500){
+            this.char.projectiles.splice(i, 1);
+        };
+    };
     
     // character
     this.char.render(context, this.r, this.g, this.b);
