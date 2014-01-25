@@ -59,7 +59,7 @@ particle.prototype.update = function(){
     this.rotation[1] += 0.1;
 }
 particle.prototype.drawRect = function(){
-    this.context.fillStyle = "hsla(" + this.hue + ", 90%, 40%, 0.5)";
+    this.context.fillStyle = "hsla(" + this.hue + ", 100%, 20%, 0.5)";
     this.context.strokeStyle = null;
     this.context.fillRect(this.position[0], this.position[1], this.size[0], this.size[1]);
 }

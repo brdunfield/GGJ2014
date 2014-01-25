@@ -58,7 +58,7 @@ Character.prototype.update = function(totalMS, generator, enemies)
     this.offsetMain = generator.getNoise( (totalMS + 50000) / 2100 );
     
     //check for collisions with enemies
-    if(typeof(this.enemies) != 'undefined')
+    if(typeof(enemies) != 'undefined')
     {
         for(var i = 0; i < this.projectiles.length; i++)
         {

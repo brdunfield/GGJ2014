@@ -16,11 +16,11 @@ var Engine = function(canvasID) {
     this.offsetBackground = 0;
     this.numScrollsForeground = 1;
     this.numScrollsBackground = 1;
-    this.imgForeground = this.generator.generateBackground(canvas.width, canvas.height, 30, 0, 0.05);
-    this.imgForegroundNext = this.generator.generateBackground(canvas.width, canvas.height, 30, 1, 0.05);
-    this.imgBackground = this.generator.generateBackground(canvas.width, canvas.height, 10, 0, 0.05);
-    this.imgBackgroundNext = this.generator.generateBackground(canvas.width, canvas.height, 10, 1, 0.05);
-    this.imgSky = this.generator.generateBackground(canvas.width, canvas.height, 1, 1, 0.005);
+    this.imgForeground = this.generator.generateBackground(canvas.width, canvas.height, 30, 0, 0.05, 50, 150);
+    this.imgForegroundNext = this.generator.generateBackground(canvas.width, canvas.height, 30, 1, 0.05, 50, 150);
+    this.imgBackground = this.generator.generateBackground(canvas.width, canvas.height, 10, 0, 0.05, 175, 250);
+    this.imgBackgroundNext = this.generator.generateBackground(canvas.width, canvas.height, 10, 1, 0.05, 175, 250);
+    this.imgSky = this.generator.generateBackground(canvas.width, canvas.height, 1, 1, 0.005, 200, 255);
     
     // time
     this.startTime = 0;
@@ -131,7 +131,7 @@ Engine.prototype.animate = function(time) {
                                                                    this.imgForeground.h, 
                                                                    30, 
                                                                    ++this.numScrollsForeground, 
-                                                                   0.05);
+                                                                   0.05, 50, 150);
     }
     this.offsetBackground -= this.speed * timeSinceLastFrame * 0.001 * 0.3;
     if(this.offsetBackground <= -context.canvas.width)
@@ -142,7 +142,7 @@ Engine.prototype.animate = function(time) {
                                                                    this.imgBackground.h, 
                                                                    10, 
                                                                    ++this.numScrollsBackground, 
-                                                                   0.05);
+                                                                   0.05, 175, 250);
     }
     
     //update character and enemies
