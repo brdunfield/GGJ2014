@@ -28,6 +28,9 @@ var Engine = function(canvasID) {
     // game variables
     this.distance = 0;
     this.char = this.generator.generateCharacter(100);
+    this.enemies = new Enemies();
+    
+    this.timeSinceLastEnemy = 0;
     
     this.colourDecay = [2, 2, 2]; // per second
     this.r = Math.random() * 100 + 50;
@@ -74,6 +77,7 @@ Engine.prototype.animate = function(time) {
         context = this.context;
     var timeSinceLastFrame = time - this.lastTime;
     this.timeSinceLastColor += timeSinceLastFrame;
+    this.timeSinceLastEnemy += timeSinceLastFrame;
     this.timeSinceLastDamage += timeSinceLastFrame;
     
     // Update ~~~~~~~~~~~~~~~~~~~
@@ -92,7 +96,7 @@ Engine.prototype.animate = function(time) {
     this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame/1000);
     this.b = Math.max(0, this.b - this.colourDecay[2] * timeSinceLastFrame/1000);
     
-    //update images with colors
+    //update image color blending
     var r = this.r / 255,
         g = this.g / 255,
         b = this.b / 255;
@@ -107,8 +111,9 @@ Engine.prototype.animate = function(time) {
         this.imgForegroundNext = this.generator.generateBackground(this.imgForeground.w, this.imgForeground.h, 30, ++this.numScrolls, 0.05);
     }
     
-    //update character
+    //update character and enemies
     this.char.update(time, this.generator);
+    this.enemies.update(time, this.generator);
     
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~
     context.clearRect(0, 0, getWidth(), getHeight());
@@ -140,13 +145,22 @@ Engine.prototype.animate = function(time) {
     
     
     // foreground
-    context.beginPath();
-    context.moveTo(this.worldCoords[0].x, this.worldCoords[0].y);
-    for (var i=1; i < this.worldCoords.length; i++) {
-        context.lineTo(this.worldCoords[i].x, this.worldCoords[i].y);
-    }
-    context.strokeStyle = 'black';
-    context.stroke();
+    //draw path for clipping
+    context.save();
+        context.beginPath();
+        context.moveTo(this.worldCoords[0].x, this.worldCoords[0].y);
+        for (var i=1; i < this.worldCoords.length; i++) {
+            context.lineTo(this.worldCoords[i].x, this.worldCoords[i].y);
+        }
+        context.lineTo(context.canvas.width, context.canvas.height);
+        context.lineTo(0, context.canvas.height);
+        context.closePath();
+        context.clip();
+        //draw background images
+        context.translate(this.offsetForeground, 0);
+        context.drawImage(this.imgForeground.getImage(), 0, 0);
+        context.drawImage(this.imgForegroundNext.getImage(), this.imgForeground.w, 0);
+    context.restore();
     
     if (this.colorPickup) { this.colorPickup.render(context); }
     
@@ -183,6 +197,7 @@ Engine.prototype.animate = function(time) {
     
     // character
     this.char.render(context, this.r, this.g, this.b);
+    this.enemies.render(context);
     
     // UI ~~~~~~~~~~~~~~~~~~~
     this.drawUI(context);
@@ -198,30 +213,36 @@ Engine.prototype.animate = function(time) {
 
 Engine.prototype.translateWorld = function(t) {
     var d = new Date();
-    this.speed = this.speed + t/1000;
+    this.speed = this.speed + t * 0.001;
+    
     if (this.char.falling)
         this.char.jumpV = this.char.jumpV - (t*this.gravity/1000);
+    
+    //find what we're translating by
+    var dX = -this.speed * t * 0.001,
+        dY = 0;
+    if (this.char.falling) {
+        dY = this.char.jumpV;
+    }
+    else if (this.char.climbBy) {
+        dY = -this.char.climbBy;
+    }
+
+    
     // translate world according to speed / falling speed
     for (var i = 0; i < this.worldCoords.length; i++) {
         // x
-        this.worldCoords[i].x -= this.speed*t/1000;
+        this.worldCoords[i].x += dX;
         // y
-        if (this.char.falling) {
-            this.worldCoords[i].y += this.char.jumpV;
-        }
-        else if (this.char.climbBy) {
-            this.worldCoords[i].y -= this.char.climbBy;
-        }
+        this.worldCoords[i].y += dY;
     }
     // translate colorPickup
     if (this.colorPickup) {
-        this.colorPickup.x -= this.speed*t/1000;
-        
-        if (this.char.falling)
-            this.colorPickup.y += this.char.jumpV;
-        else if (this.char.climbBy)
-            this.colorPickup.y -= this.char.climbBy;
+        this.colorPickup.x += dX;
+        this.colorPickup.y += dY;
     }
+    //translate enemies
+    this.enemies.translate(dX, dY);
 };
 
 Engine.prototype.updateWorld = function() {
@@ -248,8 +269,15 @@ Engine.prototype.updateWorld = function() {
         } else if (typeRNG < 0.67) {
             type = "green";
         } else { type = "blue"; }
-        this.colorPickup = new colourPickup(type, lastCoord.x, lastCoord.y - 50);
+        this.colorPickup = new colourPickup(type, lastCoord[0], lastCoord[1] - 50);
         this.timeSinceLastColor = 0;
+    }
+    // generate an enemy maybe
+    if (Math.random()*6000 < this.timeSinceLastEnemy) {
+        this.enemies.spawn( this.context.canvas.width + 10, 
+                            this.context.canvas.height * 0.25,
+                            this.generator);
+        this.timeSinceLastEnemy = 0;
     }
 };
 
