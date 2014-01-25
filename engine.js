@@ -27,6 +27,8 @@ var Engine = function(canvasID) {
         }
     });
     
+    //chunk generator
+    this.cGenerator = new chunkGenerator();
     
     //particle emitter stuff
     this.pEmitter = new particleEmitter(this.context, new Array(300,300), new Array(0,0), new Array(255,0,0));
