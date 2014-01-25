@@ -228,7 +228,6 @@ Engine.prototype.translateWorld = function(t) {
         dY = -this.char.climbBy;
     }
 
-    
     // translate world according to speed / falling speed
     for (var i = 0; i < this.worldCoords.length; i++) {
         // x
@@ -269,14 +268,14 @@ Engine.prototype.updateWorld = function() {
         } else if (typeRNG < 0.67) {
             type = "green";
         } else { type = "blue"; }
-        this.colorPickup = new colourPickup(type, lastCoord[0], lastCoord[1] - 50);
+        var x = this.context.canvas.width + 50;
+        this.colorPickup = new colourPickup(type, x, this.getGroundIntersect(x) - 50);
         this.timeSinceLastColor = 0;
     }
     // generate an enemy maybe
-    if (Math.random()*6000 < this.timeSinceLastEnemy) {
-        this.enemies.spawn( this.context.canvas.width + 10, 
-                            this.context.canvas.height * 0.25,
-                            this.generator);
+    if (Math.random()*6000 + 1000 < this.timeSinceLastEnemy) {
+        var x = this.context.canvas.width + 50;
+        this.enemies.spawn( x, this.getGroundIntersect(x) - 50, this.generator);
         this.timeSinceLastEnemy = 0;
     }
 };
@@ -342,6 +341,43 @@ Engine.prototype.checkFalling = function(t) {
         this.char.climbBy = null;
     }  
 };
+
+Engine.prototype.getGroundIntersect = function(x)
+{
+    if( x < 0 ) this.worldCoords[0].y;
+    while( x > this.worldCoords[this.worldCoords.length-1].x)
+    {
+        var newChunk = this.cG.generateChunk(this.worldCoords[this.worldCoords.length-1], 
+                                             this.r, this.g, this.b, 
+                                             this.distance, this.speed, this.gravity);
+        for (var i=0; i < newChunk.length; i++)
+            this.worldCoords.push(newChunk[i]);
+    }
+    
+    //find points around x value
+    var l = null,
+        r = null;
+    for (var i = 0; i < this.worldCoords.length; i++) 
+    {
+        if (this.worldCoords[i].x > x && i > 0 ) 
+        {
+            l = this.worldCoords[i-1];
+            r = this.worldCoords[i];
+            break;
+        }
+    }
+    if(l == null || r == null)
+    {
+        debugger;
+    }
+    else
+    {
+        var m = (r.y - l.y) / (r.x - l.x);
+        var b = l.y - m * l.x;
+
+        return m * x + b;
+    }
+}
 
 Engine.prototype.drawUI = function(context) {
     context.font = "30px Arial";
