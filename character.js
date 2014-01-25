@@ -4,6 +4,8 @@ var Character = function(w, h) {
     this.y = getHeight() /2;
     this.x = 100;
     
+    this.hp = 3;
+    
     if(typeof(w) == 'undefined') 
         this.w = 100;
     else 
