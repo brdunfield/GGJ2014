@@ -60,7 +60,6 @@ particleSquare.prototype.update = function(){
 }
 particleSquare.prototype.draw = function(){
     this.context.fillStyle = "rgb(" + Math.round(this.colour[0]) + ", " + Math.round(this.colour[1]) + ", " + Math.round(this.colour[2]) + ")";
-    this.context.ellipse = 
     this.context.fillRect(this.position[0], this.position[1], this.size, this.size);
 }
 particleSquare.prototype.run = function(){

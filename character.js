@@ -26,6 +26,10 @@ var Character = function(w, h) {
     this.offsetBack = 0.5;
     this.offsetFront = 0.5;
     this.offsetMain = 0.5;
+    
+    //for attack and defense
+    this.projectiles = [];
+    this.shields = [];
 };
 
 Character.prototype.jump = function() {
@@ -34,9 +38,14 @@ Character.prototype.jump = function() {
     this.jumpV = 20;
 };
 
-Character.prototype.attack = function() {
-    
+Character.prototype.attack = function(context) {
+    this.projectiles.push(new particleEmitter(context, [this.x,this.y], [25,0], [5,5], [0,0,0], 4, 20, 5));
 };
+
+Character.prototype.defend = function(context){
+    this.shields.push(new particleEmitter(context, [this.x,this.y], [0,0], [5,5], [0,0,0], 50, 20, 5));
+};
+
 
 Character.prototype.update = function(totalMS, generator)
 {
