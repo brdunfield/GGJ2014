@@ -22,7 +22,7 @@ particleEmitter.prototype.run = function(time){
         this.particles.splice(0, 1);
     };
     
-    console.log(this.position);
+    //console.log(this.position);
 }
 
 

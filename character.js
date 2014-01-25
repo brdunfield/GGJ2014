@@ -18,10 +18,10 @@ Character.prototype.attack = function() {
 };
 
 // ?
-Character.prototype.render = function(context) {
+Character.prototype.render = function(context, r, g, b) {
     context.beginPath();
-    context.rect(50, getHeight()/2 - 100, 100, 100);
-    context.fillStyle = 'blue';
+    context.rect(this.x - 50, this.y - 50, 100, 100);
+    context.fillStyle = "rgb(" + Math.round(r) + ", " + Math.round(g) + ", " + Math.round(b) + ")";
     context.fill();
     context.lineWidth = 3;
     context.strokeStyle = 'black';
