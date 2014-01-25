@@ -3,16 +3,23 @@ Math.twoPI = Math.PI * 2;
 var Engine = function(canvasID) {
     var self = this,
         canvas = document.getElementById(canvasID);
+    
     canvas.width = getWidth();
     canvas.height = getHeight();
     this.context = canvas.getContext('2d');
     
+    //useful stuff
+    this.generator = new Generator();
+    
+    //graphics 
+    this.offsetForeground = 0;
+    this.numScrolls = 1;
+    this.imgForeground = this.generator.generateBackground(canvas.width, canvas.height, 30, 0, 0.05);
+    this.imgForegroundNext = this.generator.generateBackground(canvas.width, canvas.height, 30, 1, 0.05);
+    
     // time
     this.startTime = 0;
     this.lastTime = 0;
-    
-    //useful stuff
-    this.generator = new Generator();
     
     // physics
     this.speed = 500; // px/s
@@ -80,6 +87,21 @@ Engine.prototype.animate = function(time) {
     this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame/1000);
     this.b = Math.max(0, this.b - this.colourDecay[2] * timeSinceLastFrame/1000);
     
+    //update images with colors
+    var r = this.r / 255,
+        g = this.g / 255,
+        b = this.b / 255;
+    this.imgForeground.blend(r * r, g * g, b * b);
+    this.imgForegroundNext.blend(r * r, g * g, b * b);
+    //image positions
+    this.offsetForeground -= this.speed * timeSinceLastFrame * 0.001;
+    if(this.offsetForeground <= -context.canvas.width)
+    {
+        this.offsetForeground = 0;
+        this.imgForeground = this.imgForegroundNext;
+        this.imgForegroundNext = this.generator.generateBackground(this.imgForeground.w, this.imgForeground.h, 30, ++this.numScrolls, 0.05);
+    }
+    
     //update character
     this.char.update(time, this.generator);
     
@@ -90,13 +112,22 @@ Engine.prototype.animate = function(time) {
     
     
     // foreground
-    context.beginPath();
-    context.moveTo(this.worldCoords[0][0], this.worldCoords[0][1]);
-    for (var i=1; i < this.worldCoords.length; i++) {
-        context.lineTo(this.worldCoords[i][0], this.worldCoords[i][1]);
-    }
-    context.strokeStyle = 'black';
-    context.stroke();
+    //create path for clipping from world
+    context.save();
+        context.beginPath();
+        context.moveTo(this.worldCoords[0][0], this.worldCoords[0][1]);
+        for (var i = 1; i < this.worldCoords.length; i++) {
+            context.lineTo(this.worldCoords[i][0], this.worldCoords[i][1]);
+        }
+        context.lineTo(context.canvas.width, context.canvas.height);
+        context.lineTo(0, context.canvas.height);
+        context.closePath();
+        context.clip();
+        //draw images into clip
+        context.translate(this.offsetForeground, 0);
+        context.drawImage(this.imgForeground.getImage(), 0, 0);
+        context.drawImage(this.imgForegroundNext.getImage(), context.canvas.width, 0);
+    context.restore();
     
     if (this.colorPickup) { this.colorPickup.render(context); }
     
