@@ -5,13 +5,15 @@ function Generator()
 
 //generates a new character object with randomy generated sprites
 //size -> character sprite width and height (must be no less than 10)
+//enemy (optional) -> boolean of type, defaults to character
 //hue (optional) -> value from 0 - 360 to define color of character
-Generator.prototype.generateCharacter = function(size, hue)
+Generator.prototype.generateCharacter = function(size, enemy, hue)
 {
     if( typeof(hue) == 'undefined' ) 
         hue = Math.random() * 360;
     else
         hue = Math.min( 360, Math.max( 0, hue ) );
+    if( typeof(enemy) == 'undefined' ) enemy = false;
     
     //create charater
     var char = new Character(size, size, hue);
@@ -62,18 +64,37 @@ Generator.prototype.generateCharacter = function(size, hue)
     
     //eyes
     ctxMain.fillStyle = 'white';
-    ctxMain.beginPath();
     
     var rad1 = size * 0.06 + Math.random() * size * 0.06,
         rad2 = size * 0.06 + Math.random() * size * 0.06,
         pos1X = size * 0.5 + Math.random() * size * 0.125,
         pos1Y = size * 0.25 + Math.random() * size * 0.125,
         pos2X = size * 0.75 + Math.random() * size * 0.125,
-        pos2Y = size * 0.25 + Math.random() * size * 0.125;
-        
-    ctxMain.arc( pos1X, pos1Y, rad1, 0, Math.twoPI, false);
-    ctxMain.moveTo(pos2X + rad2, pos2Y);
-    ctxMain.arc( pos2X, pos2Y, rad2, 0, Math.twoPI, false);
+        pos2Y = size * 0.25 + Math.random() * size * 0.125,
+        start1 = 0,
+        end1 = Math.twoPI,
+        start2 = 0,
+        end2 = Math.twoPI;
+    
+    if(enemy)
+    {
+        pos1X = size - pos1X;
+        pos2X = size - pos2X;
+        start1 = -Math.PI * 0.5 + Math.random() * Math.PI * 0.25;
+        end1 = -Math.PI + Math.random() * Math.PI * 0.25;
+        start2 = -Math.PI * 0.25 + Math.random() * Math.PI * 0.25;
+        end2 = -Math.PI * 0.75 + Math.random() * Math.PI * 0.25;
+    }
+    
+    ctxMain.beginPath();
+    ctxMain.arc( pos1X, pos1Y, rad1, start1, end1, false);
+    ctxMain.closePath();
+    ctxMain.fill();
+    ctxMain.stroke();
+    
+    ctxMain.beginPath();
+    ctxMain.arc( pos2X, pos2Y, rad2, start2, end2, false);
+    ctxMain.closePath();
     ctxMain.fill();
     ctxMain.stroke();
     
@@ -107,6 +128,9 @@ Generator.prototype.generateCharacter = function(size, hue)
     var oX = size * 0.125,
         oY = size * 0.5;
     
+    if(enemy)
+        oX = size - oX;
+    
     ctxMain.beginPath();
     for(var i = 0; i < numPoints; ++i)
     {
@@ -133,6 +157,9 @@ Generator.prototype.generateCharacter = function(size, hue)
     
     var oX = size - size * 0.125,
         oY = size * 0.5;
+    
+    if(enemy)
+        oX = size - oX;
     
     ctxMain.beginPath();
     for(var i = 0; i < numPoints; ++i)

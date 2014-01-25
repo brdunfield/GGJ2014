@@ -13,18 +13,64 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     console.log(maxJumpRange);
     var RNG = Math.random();
     if (RNG < 0.25 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
-    else if (RNG < 0.5 && this.lastChunk != "spikes") return this.generateSpikes(lastPoint, maxJumpRange);
+    else if (RNG < 0.5 && this.lastChunk != "spikes" && dist > /*50*/ 5) return this.generateSpikes(lastPoint, maxJumpRange);
     else if (RNG < 0.75 && this.lastChunk != "cliff") return this.generateCliff(lastPoint);
     else return this.generateStraight(lastPoint);
 };
 
+chunkGenerator.prototype.generatePlatform = function(startPoint) {
+    var points = [];
+    var width = Math.random() * 300 + 100;
+    points.push({'x': startPoint.x, 
+                 'y': startPoint.y,
+                 'damage': false });
+    points.push({'x': startPoint.x, 
+                 'y': startPoint.y - 50,
+                 'damage': false });
+    points.push({'x': startPoint.x + width, 
+                 'y': startPoint.y - 50,
+                 'damage': false });
+    points.push({'x': startPoint.x + width, 
+                 'y': startPoint.y,
+                 'damage': false });
+    points.push({'x': startPoint.x, 
+                 'y': startPoint.y,
+                 'damage': false });
+    
+    return points;
+};
+
+chunkGenerator.prototype.generateFork = function(startPoint) {
+    console.log("Generating Fork");
+    var points = [];
+    
+    points.push({'x': startPoint.x, 
+                 'y': startPoint.y - 200,
+                 'damage': false });
+    points.push({'x': startPoint.x + 500, 
+                 'y': startPoint.y - 200,
+                 'damage': false });
+    points.push({'x': startPoint.x + 500, 
+                 'y': startPoint.y - 400,
+                 'damage': false });
+    points.push({'x': startPoint.x + 1000, 
+                 'y': startPoint.y - 400,
+                 'damage': false });
+    return points;
+};
+
 //make mountain from last point
 chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
+    console.log("Generating Mountain");
     var points = [];
-    var peak = [startPoint[0] + Math.random()*1000 +400, startPoint[1] - Math.random()*400 - 100];
+    var peak = [startPoint.x + Math.random()*1000 +400, startPoint.y - Math.random()*400 - 100];
     var endX = peak[0] + Math.random()* 1000 + 400;
-    points.push([peak[0], peak[1]]);
-    points.push([endX, peak[1] + Math.random()*(endX - peak[0])*maxSlope]);
+    points.push({'x': peak[0], 
+                 'y': peak[1],
+                 'damage': false });
+    points.push({'x': endX, 
+                 'y': peak[1] + Math.random()*(endX - peak[0])*maxSlope,
+                 'damage': false});
     
     this.lastChunk = "mountain";
     return points;
@@ -33,6 +79,7 @@ chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
 //make spikes
 //make mountain from last point
 chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
+    console.log("Generating Spikes");
     var points = [];
     points.push(startPoint);
     var numSpikes = Math.round(Math.random() * ((maxJumpRange / 15) - 6)) + 5;
@@ -49,25 +96,40 @@ chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
 
 chunkGenerator.prototype.generateSpike = function(startPoint) {
     var points =[];
-    points.push([startPoint[0] + 5, startPoint[1] - 10]);
-    points.push([startPoint[0] + 10, startPoint[1]]);
-    points.push([startPoint[0] + 15, startPoint[1]]);
+    points.push({'x': startPoint.x + 5,
+                 'y': startPoint.y - 10,
+                 'damage': true });
+    points.push({'x': startPoint.x + 10,
+                 'y': startPoint.y,
+                 'damage': true });
+    points.push({'x': startPoint.x + 15,
+                 'y': startPoint.y,
+                 'damage': true });
     return points;
 }
 
 chunkGenerator.prototype.generateCliff = function(startPoint){
+    console.log("Generating Cliff");
     var points = [];
-    
-    points.push([startPoint[0], startPoint[1] + Math.random()*100 + 100]);
+    var bottom = startPoint.y + Math.random()*100 + 100;
+    points.push({'x': startPoint.x, 
+                 'y': bottom,
+                 'damage': false});
+    points.push({'x': startPoint.x + Math.random(200) + 50, 
+                 'y': bottom,
+                 'damage': false});
     this.lastChunk="cliff";
     
     return points;
 };
 
 chunkGenerator.prototype.generateStraight = function(startPoint){
+    console.log("Generating Straight");
     var points = [];
     
-    points.push([startPoint[0] + Math.random()*1000 + 500, startPoint[1]]);
+    points.push({'x': startPoint.x + Math.random()*1000 + 500,
+                 'y': startPoint.y,
+                 'damage': false});
     this.lastChunk="straight";
     
     return points;

@@ -28,18 +28,22 @@ var Engine = function(canvasID) {
     // game variables
     this.distance = 0;
     this.char = this.generator.generateCharacter(100);
+    this.enemies = new Enemies();
+    
+    this.timeSinceLastEnemy = 0;
     
     this.colourDecay = [2, 2, 2]; // per second
-    this.r = 70;
-    this.g = 100;
-    this.b = 200;
+    this.r = Math.random() * 100 + 50;
+    this.g = Math.random() * 100 + 50;
+    this.b = Math.random() * 100 + 50;
     
     this.timeSinceLastColor = 0;
     this.timeSinceLastParticle = 0;
+    this.timeSinceLastDamage = 0;
     this.colorPickup = null;
     
     // world variables
-    this.worldCoords = [[0, getHeight()/2], [200, getHeight()/2 + 50]];
+    this.worldCoords = [{'x': 0, 'y': getHeight()/2, 'damage': false}, {'x': 200, 'y': getHeight()/2 + 50, 'damage': false}];
     this.platformCoords = [];
     this.cG = new chunkGenerator();
     
@@ -52,24 +56,17 @@ var Engine = function(canvasID) {
                 self.char.jump();
         }
     });
-    //Attack handler (F key)
-    window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 70) {
-            self.char.attack(self.context);
-        }
-    });
-    //Defend handler (D key)
-    window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 68) {
-            self.char.defend(self.context);
-        }
-    });
+    this.restartHandler = null;
+    
+    //particle emitter stuff
+    this.pEmitter = new particleEmitter(this.context, new Array(300,300), new Array(0,0), new Array(255,0,0));
 };
 
 Engine.prototype.start = function() {
     var self = this;
     var d = new Date();
     this.startTime = d.getTime();
+    this.restartHandler = null;
     window.requestAnimationFrame(function (time) {
         self.animate.call(self, time);
     });
@@ -80,10 +77,11 @@ Engine.prototype.animate = function(time) {
         context = this.context;
     var timeSinceLastFrame = time - this.lastTime;
     this.timeSinceLastColor += timeSinceLastFrame;
-    
+    this.timeSinceLastEnemy += timeSinceLastFrame;
+    this.timeSinceLastDamage += timeSinceLastFrame;
     
     // Update ~~~~~~~~~~~~~~~~~~~
-    this.distance += (this.speed/200 * timeSinceLastFrame / 1000);
+    this.distance += (this.speed * timeSinceLastFrame / 1000) / 500; // divide by initial speed as if it were a meter
     //console.log(Math.round(this.distance));
     this.updateWorld();
     this.translateWorld(timeSinceLastFrame);
@@ -98,7 +96,7 @@ Engine.prototype.animate = function(time) {
     this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame/1000);
     this.b = Math.max(0, this.b - this.colourDecay[2] * timeSinceLastFrame/1000);
     
-    //update images with colors
+    //update image color blending
     var r = this.r / 255,
         g = this.g / 255,
         b = this.b / 255;
@@ -113,31 +111,55 @@ Engine.prototype.animate = function(time) {
         this.imgForegroundNext = this.generator.generateBackground(this.imgForeground.w, this.imgForeground.h, 30, ++this.numScrolls, 0.05);
     }
     
-    //update character
-    this.char.update(time, this.generator);
+    //update character and enemies
+    this.char.update(time, this.generator, this.enemies);
+    this.enemies.update(time, this.generator);
     
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~
     context.clearRect(0, 0, getWidth(), getHeight());
+    
+    if (this.char.hp <= 0) {
+        context.font = "50px Arial";
+        context.fillStyle = "#000";
+        context.textAlign = "left";
+        context.fillText("Game Over.", getWidth()/2, getHeight()/2);
+        
+        context.rect(getWidth()/2, getHeight()/2 + 50, 300, 50);
+        context.fillStyle = 'green';
+        context.fill();
+        
+        context.font = "18px Arial";
+        context.fillStyle="#000";
+        context.fillText("Play Again", getWidth() / 2 + 100, getHeight()/2 + 80);
+        
+        this.restartHandler = document.getElementById("canvas").addEventListener('click', function(e) {
+            if (e.clientX > getWidth() / 2 && e.clientX < getWidth() / 2 + 300 && e.clientY > getHeight()/2 + 50 && e.clientY < getWidth()/2 + 100) {
+                self = new Engine("canvas");
+                self.start();
+            }
+        });
+        return;
+    }
     
     // background
     
     
     // foreground
-    //create path for clipping from world
+    //draw path for clipping
     context.save();
         context.beginPath();
-        context.moveTo(this.worldCoords[0][0], this.worldCoords[0][1]);
-        for (var i = 1; i < this.worldCoords.length; i++) {
-            context.lineTo(this.worldCoords[i][0], this.worldCoords[i][1]);
+        context.moveTo(this.worldCoords[0].x, this.worldCoords[0].y);
+        for (var i=1; i < this.worldCoords.length; i++) {
+            context.lineTo(this.worldCoords[i].x, this.worldCoords[i].y);
         }
         context.lineTo(context.canvas.width, context.canvas.height);
         context.lineTo(0, context.canvas.height);
         context.closePath();
         context.clip();
-        //draw images into clip
+        //draw background images
         context.translate(this.offsetForeground, 0);
         context.drawImage(this.imgForeground.getImage(), 0, 0);
-        context.drawImage(this.imgForegroundNext.getImage(), context.canvas.width, 0);
+        context.drawImage(this.imgForegroundNext.getImage(), this.imgForeground.w, 0);
     context.restore();
     
     if (this.colorPickup) { this.colorPickup.render(context); }
@@ -180,10 +202,12 @@ Engine.prototype.animate = function(time) {
     
     // character
     this.char.render(context, this.r, this.g, this.b);
+    this.enemies.render(context);
     
     // UI ~~~~~~~~~~~~~~~~~~~
     this.drawUI(context);
-    
+    var fps = Math.round(1000 / timeSinceLastFrame);
+    context.fillText(fps, getWidth() - 100, 100);
     
     // call next frame
     this.lastTime = time;
@@ -194,35 +218,40 @@ Engine.prototype.animate = function(time) {
 
 Engine.prototype.translateWorld = function(t) {
     var d = new Date();
-    this.speed = this.speed + t/1000;
+    this.speed = this.speed + t * 0.001;
+    
     if (this.char.falling)
         this.char.jumpV = this.char.jumpV - (t*this.gravity/1000);
+    
+    //find what we're translating by
+    var dX = -this.speed * t * 0.001,
+        dY = 0;
+    if (this.char.falling) {
+        dY = this.char.jumpV;
+    }
+    else if (this.char.climbBy) {
+        dY = -this.char.climbBy;
+    }
+
     // translate world according to speed / falling speed
     for (var i = 0; i < this.worldCoords.length; i++) {
         // x
-        this.worldCoords[i][0] -= this.speed*t/1000;
+        this.worldCoords[i].x += dX;
         // y
-        if (this.char.falling) {
-            this.worldCoords[i][1] += this.char.jumpV;
-        }
-        else if (this.char.climbBy) {
-            this.worldCoords[i][1] -= this.char.climbBy;
-        }
+        this.worldCoords[i].y += dY;
     }
     // translate colorPickup
     if (this.colorPickup) {
-        this.colorPickup.x -= this.speed*t/1000;
-        
-        if (this.char.falling)
-            this.colorPickup.y += this.char.jumpV;
-        else if (this.char.climbBy)
-            this.colorPickup.y -= this.char.climbBy;
+        this.colorPickup.x += dX;
+        this.colorPickup.y += dY;
     }
+    //translate enemies
+    this.enemies.translate(dX, dY);
 };
 
 Engine.prototype.updateWorld = function() {
     // get rid of old coords
-    if (this.worldCoords[1][0] < 0) {
+    if (this.worldCoords[1].x < 0) {
         this.worldCoords.splice(0,1);
     }
     if (this.colorPickup && this.colorPickup.x < -this.colorPickup.radius) {
@@ -230,13 +259,13 @@ Engine.prototype.updateWorld = function() {
     }
     // add a new world chunk if needed
     var lastCoord = this.worldCoords[this.worldCoords.length - 1];
-    if (lastCoord[0] < getWidth()) {
+    if (lastCoord.x < getWidth()) {
         var newChunk = this.cG.generateChunk(lastCoord, this.r, this.g, this.b, this.distance, this.speed, this.gravity);
         for (var i=0; i < newChunk.length; i++)
             this.worldCoords.push(newChunk[i]);   
     }
     // generate a colour Pickup maybe
-    if (!this.colorPickup && Math.random()*4000 + 2000 < this.timeSinceLastColor) {
+    if (!this.colorPickup && Math.random()*10000 + 4000 < this.timeSinceLastColor) {
         var typeRNG = Math.random();
         var type;
         if (typeRNG < 0.33) {
@@ -244,8 +273,15 @@ Engine.prototype.updateWorld = function() {
         } else if (typeRNG < 0.67) {
             type = "green";
         } else { type = "blue"; }
-        this.colorPickup = new colourPickup(type, lastCoord[0], lastCoord[1] - 50);
+        var x = this.context.canvas.width + 50;
+        this.colorPickup = new colourPickup(type, x, this.getGroundIntersect(x) - 50);
         this.timeSinceLastColor = 0;
+    }
+    // generate an enemy maybe
+    if (Math.random()*6000 + 1000 < this.timeSinceLastEnemy) {
+        var x = this.context.canvas.width + 50;
+        this.enemies.spawn( x, this.getGroundIntersect(x) - 50, this.generator);
+        this.timeSinceLastEnemy = 0;
     }
 };
 
@@ -272,9 +308,9 @@ Engine.prototype.checkFalling = function(t) {
     // determine two points around the char to determine the line segment
     var leftPt, rightPt;
     for (var i = 0; i < this.worldCoords.length; i++) {
-        if (this.worldCoords[i][0] < this.char.x) leftPt = this.worldCoords[i];
+        if (this.worldCoords[i].x < this.char.x) leftPt = this.worldCoords[i];
         
-        if (this.worldCoords[i][0] > this.char.x) {
+        if (this.worldCoords[i].x > this.char.x) {
             rightPt = this.worldCoords[i];
             break;
         }
@@ -282,20 +318,28 @@ Engine.prototype.checkFalling = function(t) {
     
     if(!rightPt) return;
     // determine how far away the char is from the line, and whether falling or climbing
-    var slope = (rightPt[1] - leftPt[1]) / (rightPt[0] - leftPt[0]);
-    var dx = this.char.x - leftPt[0];
-    //console.log("slope: " + slope);
+    var slope = (rightPt.y - leftPt.y) / (rightPt.x - leftPt.x);
+    var dx = this.char.x - leftPt.x;
     var d = t*this.gravity / 1000; // how far the char would fall with gravity on this frame;
-    if ((slope*dx + leftPt[1]) - (this.char.y + 50) > d && !this.char.falling) {
+    var distFromLine = (slope*dx + leftPt.y) - (this.char.y + 50);
+    
+    if (rightPt.damage && leftPt.damage && distFromLine < 5) {
+        //this.falling = null;
+        if (this.timeSinceLastDamage > 1000) {
+            this.char.hp --;
+            this.timeSinceLastDamage = 0;
+        }
+    } 
+    if ( distFromLine > d && !this.char.falling) {
         //console.log("Char needs to fall now");
         this.char.falling = true;
         this.char.jumpV = 0;
         this.char.climbBy = null;
-    } else if ((slope*dx + leftPt[1]) > this.char.y + 50) {
-        this.char.climbBy = (slope*dx + leftPt[1]) - this.char.y - 50;;
+    } else if ((slope*dx + leftPt.y) > this.char.y + 50) {
+        this.char.climbBy = (slope*dx + leftPt.y) - this.char.y - 50;;
         this.falling = null;
-    } else if((slope*dx + leftPt[1]) < this.char.y + 50) {
-        this.char.climbBy = (slope*dx + leftPt[1]) - this.char.y - 50;
+    } else if((slope*dx + leftPt.y) < this.char.y + 50) {
+        this.char.climbBy = (slope*dx + leftPt.y) - this.char.y - 50;
         this.char.falling = null;
     } else {
         this.char.falling = false;
@@ -303,14 +347,52 @@ Engine.prototype.checkFalling = function(t) {
     }  
 };
 
+Engine.prototype.getGroundIntersect = function(x)
+{
+    if( x < 0 ) this.worldCoords[0].y;
+    while( x > this.worldCoords[this.worldCoords.length-1].x)
+    {
+        var newChunk = this.cG.generateChunk(this.worldCoords[this.worldCoords.length-1], 
+                                             this.r, this.g, this.b, 
+                                             this.distance, this.speed, this.gravity);
+        for (var i=0; i < newChunk.length; i++)
+            this.worldCoords.push(newChunk[i]);
+    }
+    
+    //find points around x value
+    var l = null,
+        r = null;
+    for (var i = 0; i < this.worldCoords.length; i++) 
+    {
+        if (this.worldCoords[i].x > x && i > 0 ) 
+        {
+            l = this.worldCoords[i-1];
+            r = this.worldCoords[i];
+            break;
+        }
+    }
+    if(l == null || r == null)
+    {
+        debugger;
+    }
+    else
+    {
+        var m = (r.y - l.y) / (r.x - l.x);
+        var b = l.y - m * l.x;
+
+        return m * x + b;
+    }
+}
+
 Engine.prototype.drawUI = function(context) {
     context.font = "30px Arial";
     context.fillStyle = "#000";
-    context.fillText(Math.round(this.distance) + "m", getWidth() - 100, 40);
+    context.textAlign = "left";
+    context.fillText(Math.round(this.distance) + "m", 300, 40);
     
-    context.rect(40, 28, 255, 15);
-    context.rect(40, 48, 255, 15);
-    context.rect(40, 68, 255, 15);
+    context.rect(40, 18, 255, 15);
+    context.rect(40, 38, 255, 15);
+    context.rect(40, 58, 255, 15);
     context.strokeStyle = "#aaa";
     context.lineWidth = 1;
     context.stroke();
@@ -318,17 +400,17 @@ Engine.prototype.drawUI = function(context) {
     context.font = "14px Arial";
     context.fillStyle = "red";
     context.textAlign = "right";
-    context.fillText(Math.round(this.r), 30, 40);
+    context.fillText(Math.round(this.r), 30, 30);
     
-    context.fillRect(40, 28, Math.round(this.r), 15);
+    context.fillRect(40, 18, Math.round(this.r), 15);
     
     context.fillStyle = "green";
-    context.fillText(Math.round(this.g), 30, 60);
-    context.fillRect(40, 48, Math.round(this.g), 15);
+    context.fillText(Math.round(this.g), 30, 50);
+    context.fillRect(40, 38, Math.round(this.g), 15);
     
     context.fillStyle = "blue";
-    context.fillText(Math.round(this.b), 30, 80);
-    context.fillRect(40, 68, Math.round(this.b), 15);
+    context.fillText(Math.round(this.b), 30, 70);
+    context.fillRect(40, 58, Math.round(this.b), 15);
     
     context.setLineDash([5]);
     context.strokeStyle = "#555";
@@ -338,7 +420,29 @@ Engine.prototype.drawUI = function(context) {
     context.lineTo(240, 110);
     context.stroke();
     context.setLineDash([0]);
+    
+    for (var i=0; i < this.char.hp; i++) {
+        this.drawHeart(context, [getWidth() - 25 - (45*i), 20]);
+    }
 };
+
+Engine.prototype.drawHeart = function(context, startPoint) {
+    context.save();
+        context.translate(startPoint[0], startPoint[1]);
+        context.moveTo(0, 0);
+        context.beginPath();
+        context.lineTo(10, -10);
+        context.lineTo(20, 0);
+        context.lineTo(0, 20);
+        context.lineTo(-20, 0);
+        context.lineTo(-10, -10);
+        context.lineTo(0, 0);
+        context.closePath();
+        context.fillStyle = "red";
+        context.fill();
+        context.stroke();
+    context.restore();
+}
 
 /* ~~ Helper Functions ~~ */
 function getWidth() {
