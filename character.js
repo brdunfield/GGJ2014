@@ -1,6 +1,6 @@
 var Character = function() {
     this.y = getHeight() /2;
-    this.x = 75;
+    this.x = 100;
     
     this.jumpV = 1;
     this.falling = null;
@@ -20,7 +20,7 @@ Character.prototype.attack = function() {
 // ?
 Character.prototype.render = function(context) {
     context.beginPath();
-    context.rect(25, getHeight()/2 - 100, 100, 100);
+    context.rect(50, getHeight()/2 - 100, 100, 100);
     context.fillStyle = 'blue';
     context.fill();
     context.lineWidth = 3;

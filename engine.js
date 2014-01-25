@@ -22,7 +22,8 @@ var Engine = function(canvasID) {
     // Jump handler
     window.addEventListener('keydown', function(e) {
         if (e.keyCode == 32) {
-            self.char.jump();
+            if (!self.char.falling)
+                self.char.jump();
         }
     });
 };
@@ -41,14 +42,16 @@ Engine.prototype.animate = function(time) {
         context = this.context;
     var timeSinceLastFrame = time - this.lastTime;
     
-    // Update
+    // Update ~~~~~~~~~~~~~~~~~~~
     this.distance += (this.speed/200 * timeSinceLastFrame / 1000);
     //console.log(Math.round(this.distance));
     this.updateWorld();
     this.translateWorld(timeSinceLastFrame);
+    // gravity - fall until you hit a line
+    this.checkFalling();
     
     
-    // Draw
+    // Draw ~~~~~~~~~~~~~~~~~~~~~~~
     context.clearRect(0, 0, getWidth(), getHeight());
     
     // background
@@ -70,7 +73,7 @@ Engine.prototype.animate = function(time) {
     // character
     this.char.render(context);
     
-    // UI
+    // UI ~~~~~~~~~~~~~~~~~~~
     context.font = "30px Arial";
     context.fillText(Math.round(this.distance) + "m", getWidth() - 100, 40);
     
@@ -86,7 +89,7 @@ Engine.prototype.translateWorld = function(t) {
     var d = new Date();
     this.speed = this.speed + t/1000;
 
-    // Move world according to speed
+    // Move world according to speed / falling speed
     for (var i = 0; i < this.worldCoords.length; i++) {
         // x
         this.worldCoords[i][0] -= this.speed*t/1000;
@@ -99,8 +102,21 @@ Engine.prototype.translateWorld = function(t) {
             this.worldCoords[i][1] -= this.char.climbBy;
         }
     }
-    
-    // gravity - fall until you hit a line
+};
+
+Engine.prototype.updateWorld = function() {
+    // get rid of old coords
+    if (this.worldCoords[1][0] < 0) {
+        this.worldCoords.splice(0,1);
+    }
+    // add a new world chunk if needed
+    var lastCoord = this.worldCoords[this.worldCoords.length - 1];
+    if (lastCoord[0] < getWidth()) {
+        this.worldCoords.push([lastCoord[0] + Math.random()*300 + 200, lastCoord[1] - (Math.random()*200 - 100)]);   
+    }
+};
+
+Engine.prototype.checkFalling = function() {
     // determine two points around the char to determine the line segment
     var leftPt, rightPt;
     for (var i = 0; i < this.worldCoords.length; i++) {
@@ -127,19 +143,8 @@ Engine.prototype.translateWorld = function(t) {
     } else {
         this.char.falling = false;
         this.char.climbBy = null;
-    }
-};
-
-Engine.prototype.updateWorld = function() {
-    // get rid of old coords
-    if (this.worldCoords[1][0] < 0) {
-        this.worldCoords.splice(0,1);
-    }
-    // add a new world chunk if needed
-    var lastCoord = this.worldCoords[this.worldCoords.length - 1];
-    if (lastCoord[0] < getWidth())
-        this.worldCoords.push([lastCoord[0] + Math.random()*300 + 200, lastCoord[1] - (Math.random()*200 - 100)]);    
-};
+    }  
+}
 
 /* ~~ Helper Functions ~~ */
 function getWidth() {
