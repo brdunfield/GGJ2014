@@ -10,7 +10,7 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     var vStart = Math.pow(speed, 2) + Math.pow(50, 2),
         theta = Math.asin(50/speed);
     var maxJumpRange = vStart * Math.sin(2*theta) / gravity;
-    console.log(maxJumpRange);
+    //console.log(maxJumpRange);
     var RNG = Math.random();
     if (RNG < 0.25 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
     else if (RNG < 0.5 && this.lastChunk != "spikes" && dist > /*50*/ 5) return this.generateSpikes(lastPoint, maxJumpRange);
@@ -41,7 +41,7 @@ chunkGenerator.prototype.generatePlatform = function(startPoint) {
 };
 
 chunkGenerator.prototype.generateFork = function(startPoint) {
-    console.log("Generating Fork");
+    //console.log("Generating Fork");
     var points = [];
     
     points.push({'x': startPoint.x, 

@@ -32,7 +32,12 @@ particleEmitter.prototype.run = function(time){
     
     
     //draw the projectile
-    this.context.fillRect(this.position[0], this.position[1], 10,5);
+    if(this.type == "rect"){
+        this.context.fillStyle = "hsla(" + this.hue + ", 90%, 70%, 0.9)";
+        this.context.strokeStyle = "hsla(" + this.hue + ", 90%, 90%, 0.9)";
+        this.context.lineWidth = 2;
+        this.context.fillRect(this.position[0], this.position[1], 20,10);
+    }
 }
 
 
@@ -49,6 +54,7 @@ var particle = function(context, type, origin, velocity, hue, size){
     this.velocity[0] = Math.floor((Math.random()*velocity[0])-velocity[0]/2);
     this.velocity[1] = Math.floor((Math.random()*velocity[1])-velocity[1]/2);
     this.hue = hue;
+    this.opacity = 1.0;
     this.size = size;
 }
 
@@ -57,18 +63,25 @@ particle.prototype.update = function(){
     this.position[1] += this.velocity[1];
     this.rotation[0] += 0.1;
     this.rotation[1] += 0.1;
+    
+    this.opacity -= 0.1;
 }
 particle.prototype.drawRect = function(){
-    this.context.fillStyle = "hsla(" + this.hue + ", 90%, 40%, 0.5)";
-    this.context.strokeStyle = null;
+    this.context.fillStyle = "hsla(" + this.hue + ", 90%, 40%, " + this.opacity + ")";
+    this.context.strokeStyle = "hsla(" + this.hue + ", 90%, 90%, " + this.opacity + ")";
+    this.context.lineWidth = 2;
     this.context.fillRect(this.position[0], this.position[1], this.size[0], this.size[1]);
 }
 particle.prototype.drawEllipse = function(){
     this.context.beginPath();
-    this.context.fillStyle = "hsla(" + this.hue + ", 90%, 40%, 0.5)";
-    this.context.strokeStyle = 'black';
+    this.context.fillStyle = "hsla(" + this.hue + ", 90%, 40%, " + 0 + ")";
+//    this.context.fillStyle = "hsla(" + this.hue + ", 90%, 40%, " + this.opacity + ")";
+    this.context.strokeStyle = "hsla(" + this.hue + ", 90%, 60%, " + this.opacity + ")";
+    this.context.lineWidth = 2;
+//    this.context.arc(this.position[0], this.position[1] - this.size[0], this.size[1], 0, Math.twoPI, false);
     this.context.ellipse(this.position[0], this.position[1], this.size[0], this.size[1], this.rotation, 0, 2*Math.PI, false);
-    this.context.fill();
+//    this.context.fill();
+    this.context.stroke();
     this.context.closePath();
 }
 

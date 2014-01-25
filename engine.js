@@ -203,12 +203,22 @@ Engine.prototype.animate = function(time) {
         if(resettime)this.timeSinceLastParticle = 0;
     };
     
-    //remove character particles as they go off screen
+    //remove character projectiles as they go off screen
     for(var i = this.char.projectiles.length-1; i >= 0; i--){
         if(this.char.projectiles[i].position[0] >= window.getWidth() + 500){
             this.char.projectiles.splice(i, 1);
         };
     };
+    //shields
+    if(this.char.shields.length > 3){
+        this.char.shields.splice(0, 1);
+    }
+    else if(this.char.shields.length > 0){
+        if(this.char.shields[0].particles.length >= this.char.shields[0].maxParticles-1){
+            console.log("KILL A SHIELD");
+            this.char.shields.splice(0, 1);
+        }
+    }
     
     // character
     this.char.render(context, this.r, this.g, this.b);
