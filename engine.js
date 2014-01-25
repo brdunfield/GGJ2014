@@ -26,6 +26,10 @@ var Engine = function(canvasID) {
             self.char.jump();
         }
     });
+    
+    
+    //particle emitter stuff
+    this.pEmitter = new particleEmitter(this.context, new Array(300,300), new Array(0,0), new Array(255,0,0));
 };
 
 Engine.prototype.start = function() {
@@ -62,9 +66,8 @@ Engine.prototype.animate = function(time) {
     context.strokeStyle = 'black';
     context.stroke();
     
-    //particle emitter
-    var pEmitter = new particleEmitter(context, new Array(300,300), new Array(0,0), new Array(255,0,0));
-    pEmitter.run();
+    //particle emitter stuff
+    this.pEmitter.run(this.lastTime);
     
     // character
     this.char.render(context);
