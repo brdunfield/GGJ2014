@@ -51,13 +51,21 @@ Character.prototype.defend = function(context){
     this.shields.push(new particleEmitter(context, "ellipse", [this.x,this.y], [0,0], [5,5], this.hue, [80,80], 20, 10));
 };
 
+<<<<<<< HEAD
+Character.prototype.update = function(totalMS, generator)
+=======
+
 Character.prototype.update = function(totalMS, generator, enemies)
+>>>>>>> be7be9a343bf3f197748ad11ac5d1b210cef5297
 {
     this.offsetBack = generator.getNoise( totalMS / 2000 );
     this.offsetFront = generator.getNoise( (totalMS + 50000) / 2100 );
     this.offsetMain = generator.getNoise( (totalMS + 50000) / 2100 );
     
+<<<<<<< HEAD
     //check for collisions with enemies
+    
+=======
     if(typeof(this.enemies) != 'undefined')
     {
         for(var i = 0; i < this.projectiles.length; i++)
@@ -65,6 +73,7 @@ Character.prototype.update = function(totalMS, generator, enemies)
             enemies.checkProjectile(this.projectiles[i].position[0], this.projectiles[i].position[1]);
         }
     }
+>>>>>>> be7be9a343bf3f197748ad11ac5d1b210cef5297
 }
 
 // ?
