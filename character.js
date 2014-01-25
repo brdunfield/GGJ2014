@@ -26,6 +26,7 @@ var Character = function(w, h) {
     this.offsetBack = 0.5;
     this.offsetFront = 0.5;
     this.offsetMain = 0.5;
+    this.seed = Math.random() * 10000;
 };
 
 Character.prototype.jump = function() {

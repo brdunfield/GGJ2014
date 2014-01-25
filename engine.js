@@ -28,6 +28,9 @@ var Engine = function(canvasID) {
     // game variables
     this.distance = 0;
     this.char = this.generator.generateCharacter(100);
+    this.enemies = new Enemies();
+    
+    this.timeSinceLastEnemy = 0;
     
     this.colourDecay = [2, 2, 2]; // per second
     this.r = 70;
@@ -70,6 +73,7 @@ Engine.prototype.animate = function(time) {
         context = this.context;
     var timeSinceLastFrame = time - this.lastTime;
     this.timeSinceLastColor += timeSinceLastFrame;
+    this.timeSinceLastEnemy += timeSinceLastFrame;
     
     // Update ~~~~~~~~~~~~~~~~~~~
     this.distance += (this.speed/200 * timeSinceLastFrame / 1000);
@@ -87,7 +91,7 @@ Engine.prototype.animate = function(time) {
     this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame/1000);
     this.b = Math.max(0, this.b - this.colourDecay[2] * timeSinceLastFrame/1000);
     
-    //update images with colors
+    //update image color blending
     var r = this.r / 255,
         g = this.g / 255,
         b = this.b / 255;
@@ -102,8 +106,9 @@ Engine.prototype.animate = function(time) {
         this.imgForegroundNext = this.generator.generateBackground(this.imgForeground.w, this.imgForeground.h, 30, ++this.numScrolls, 0.05);
     }
     
-    //update character
+    //update character and enemies
     this.char.update(time, this.generator);
+    this.enemies.update(this.speed * timeSinceLastFrame * -0.001, time, this.generator);
     
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~
     context.clearRect(0, 0, getWidth(), getHeight());
@@ -136,6 +141,7 @@ Engine.prototype.animate = function(time) {
     
     // character
     this.char.render(context, this.r, this.g, this.b);
+    this.enemies.render(context);
     
     // UI ~~~~~~~~~~~~~~~~~~~
     this.drawUI(context);
@@ -202,6 +208,13 @@ Engine.prototype.updateWorld = function() {
         } else { type = "blue"; }
         this.colorPickup = new colourPickup(type, lastCoord[0], lastCoord[1] - 50);
         this.timeSinceLastColor = 0;
+    }
+    // generate an enemy maybe
+    if (Math.random()*6000 < this.timeSinceLastEnemy) {
+        this.enemies.spawn( this.context.canvas.width + 10, 
+                            this.context.canvas.height * 0.25,
+                            this.generator);
+        this.timeSinceLastEnemy = 0;
     }
 };
 
