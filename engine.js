@@ -64,8 +64,18 @@ var Engine = function(canvasID) {
     });
     this.restartHandler = null;
     
-    //particle emitter stuff
-    this.pEmitter = new particleEmitter(this.context, new Array(300,300), new Array(0,0), new Array(255,0,0));
+    //Attack handler (F key)
+    window.addEventListener('keydown', function(e) {
+        if (e.keyCode == 70) {
+            self.char.attack(self.context);
+        }
+    });
+    //Defend handler (D key)
+    window.addEventListener('keydown', function(e) {
+        if (e.keyCode == 68) {
+            self.char.defend(self.context);
+        }
+    });
 };
 
 Engine.prototype.start = function() {
@@ -207,26 +217,31 @@ Engine.prototype.animate = function(time) {
     //particle emitter stuff
     //character projectiles
     this.timeSinceLastParticle += timeSinceLastFrame;
-    if(this.char.projectiles.length !=0 && this.timeSinceLastParticle >= 1000/this.char.projectiles[0].rate){
-        for(var i = 0; i < this.char.projectiles.length; i++){
-            this.char.projectiles[i].makeParticle();
+    if(this.char.projectiles.length !=0 || this.char.shields.length != 0){
+        var resettime = false;
+        //do projectiles
+        if(this.char.projectiles[0] != null && this.timeSinceLastParticle >= 1000/this.char.projectiles[0].rate){
+            for(var i = 0; i < this.char.projectiles.length; i++){
+                this.char.projectiles[i].makeParticle();
+                resettime = true;
+            };
         };
-        this.timeSinceLastParticle = 0;
-    };
-    this.char.projectiles.forEach(function(each){
-        each.run();
-    });
-    
-    //character shield particles
-    if(this.char.shields.length !=0 && this.timeSinceLastParticle >= 1000/this.char.shields[0].rate){
-        for(var i = 0; i < this.char.shields.length; i++){
-            this.char.shields[i].makeParticle();
+        this.char.projectiles.forEach(function(each){
+            each.run();
+        });
+        //character shield particles
+        if(this.char.shields[0] != null && this.timeSinceLastParticle >= 1000/this.char.shields[0].rate){
+            for(var i = 0; i < this.char.shields.length; i++){
+                this.char.shields[i].makeParticle();
+                resettime = true;
+            };
         };
-        this.timeSinceLastParticle = 0;
+        this.char.shields.forEach(function(each){
+            each.run();
+        });
+        
+        if(resettime)this.timeSinceLastParticle = 0;
     };
-    this.char.shields.forEach(function(each){
-        each.run();
-    });
     
     //remove character particles as they go off screen
     for(var i = this.char.projectiles.length-1; i >= 0; i--){
