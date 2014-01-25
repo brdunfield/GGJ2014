@@ -13,9 +13,14 @@ var Engine = function(canvasID) {
     
     //graphics 
     this.offsetForeground = 0;
-    this.numScrolls = 1;
+    this.offsetBackground = 0;
+    this.numScrollsForeground = 1;
+    this.numScrollsBackground = 1;
     this.imgForeground = this.generator.generateBackground(canvas.width, canvas.height, 30, 0, 0.05);
     this.imgForegroundNext = this.generator.generateBackground(canvas.width, canvas.height, 30, 1, 0.05);
+    this.imgBackground = this.generator.generateBackground(canvas.width, canvas.height, 10, 0, 0.05);
+    this.imgBackgroundNext = this.generator.generateBackground(canvas.width, canvas.height, 10, 1, 0.05);
+    this.imgSky = this.generator.generateBackground(canvas.width, canvas.height, 1, 1, 0.005);
     
     // time
     this.startTime = 0;
@@ -43,6 +48,7 @@ var Engine = function(canvasID) {
     this.colorPickup = null;
     
     // world variables
+    this.backCoords = [{'x': 0, 'y': getHeight()/2}, {'x': 200, 'y': getHeight()/2 + 50}];
     this.worldCoords = [{'x': 0, 'y': getHeight()/2, 'damage': false}, {'x': 200, 'y': getHeight()/2 + 50, 'damage': false}];
     this.platformCoords = [];
     this.cG = new chunkGenerator();
@@ -100,15 +106,33 @@ Engine.prototype.animate = function(time) {
     var r = this.r / 255,
         g = this.g / 255,
         b = this.b / 255;
+    this.imgSky.blend(r * r, g * g, b * b);
     this.imgForeground.blend(r * r, g * g, b * b);
     this.imgForegroundNext.blend(r * r, g * g, b * b);
+    this.imgBackground.blend(r * r, g * g, b * b);
+    this.imgBackgroundNext.blend(r * r, g * g, b * b);
     //image positions
     this.offsetForeground -= this.speed * timeSinceLastFrame * 0.001;
     if(this.offsetForeground <= -context.canvas.width)
     {
         this.offsetForeground = 0;
         this.imgForeground = this.imgForegroundNext;
-        this.imgForegroundNext = this.generator.generateBackground(this.imgForeground.w, this.imgForeground.h, 30, ++this.numScrolls, 0.05);
+        this.imgForegroundNext = this.generator.generateBackground(this.imgForeground.w, 
+                                                                   this.imgForeground.h, 
+                                                                   30, 
+                                                                   ++this.numScrollsForeground, 
+                                                                   0.05);
+    }
+    this.offsetBackground -= this.speed * timeSinceLastFrame * 0.001 * 0.3;
+    if(this.offsetBackground <= -context.canvas.width)
+    {
+        this.offsetBackground = 0;
+        this.imgBackground = this.imgBackgroundNext;
+        this.imgBackgroundNext = this.generator.generateBackground(this.imgBackground.w, 
+                                                                   this.imgBackground.h, 
+                                                                   10, 
+                                                                   ++this.numScrollsBackground, 
+                                                                   0.05);
     }
     
     //update character and enemies
@@ -121,16 +145,16 @@ Engine.prototype.animate = function(time) {
     if (this.char.hp <= 0) {
         context.font = "50px Arial";
         context.fillStyle = "#000";
-        context.textAlign = "left";
-        context.fillText("Game Over.", getWidth()/2, getHeight()/2);
+        context.textAlign = "center";
+        context.fillText("Game Over.", getWidth()*0.5, getHeight()*0.5);
         
-        context.rect(getWidth()/2, getHeight()/2 + 50, 300, 50);
+        context.rect(getWidth()*0.25, getHeight()/2 + 50, getWidth() *0.5, 50);
         context.fillStyle = 'green';
         context.fill();
         
         context.font = "18px Arial";
         context.fillStyle="#000";
-        context.fillText("Play Again", getWidth() / 2 + 100, getHeight()/2 + 80);
+        context.fillText("Play Again", getWidth() *0.5, getHeight()/2 + 80);
         
         this.restartHandler = document.getElementById("canvas").addEventListener('click', function(e) {
             if (e.clientX > getWidth() / 2 && e.clientX < getWidth() / 2 + 300 && e.clientY > getHeight()/2 + 50 && e.clientY < getWidth()/2 + 100) {
@@ -141,11 +165,27 @@ Engine.prototype.animate = function(time) {
         return;
     }
     
-    // background
+    //draw sky
+    context.drawImage(this.imgSky.getImage(), 0, 0);
     
+    // background
+    context.save();
+        context.beginPath();
+        context.moveTo(this.backCoords[0].x, this.backCoords[0].y);
+        for (var i=1; i < this.backCoords.length; i++) {
+            context.lineTo(this.backCoords[i].x, this.backCoords[i].y);
+        }
+        context.lineTo(context.canvas.width, context.canvas.height);
+        context.lineTo(0, context.canvas.height);
+        context.closePath();
+        context.clip();
+        //draw background images
+        context.translate(this.offsetBackground, 0);
+        context.drawImage(this.imgBackground.getImage(), 0, 0);
+        context.drawImage(this.imgBackgroundNext.getImage(), this.imgBackground.w, 0);
+    context.restore();
     
     // foreground
-    //draw path for clipping
     context.save();
         context.beginPath();
         context.moveTo(this.worldCoords[0].x, this.worldCoords[0].y);
@@ -156,7 +196,7 @@ Engine.prototype.animate = function(time) {
         context.lineTo(0, context.canvas.height);
         context.closePath();
         context.clip();
-        //draw background images
+        //draw foreground images
         context.translate(this.offsetForeground, 0);
         context.drawImage(this.imgForeground.getImage(), 0, 0);
         context.drawImage(this.imgForegroundNext.getImage(), this.imgForeground.w, 0);
@@ -230,10 +270,13 @@ Engine.prototype.translateWorld = function(t) {
 
     // translate world according to speed / falling speed
     for (var i = 0; i < this.worldCoords.length; i++) {
-        // x
         this.worldCoords[i].x += dX;
-        // y
         this.worldCoords[i].y += dY;
+    }
+    // translate background according to speed / falling speed
+    for (var i = 0; i < this.backCoords.length; i++) {
+        this.backCoords[i].x += dX * 0.3;
+        this.backCoords[i].y += dY * 0.3;
     }
     // translate colorPickup
     if (this.colorPickup) {
@@ -249,6 +292,9 @@ Engine.prototype.updateWorld = function() {
     if (this.worldCoords[1].x < 0) {
         this.worldCoords.splice(0,1);
     }
+    if (this.backCoords[1].x < 0) {
+        this.backCoords.splice(0,1);
+    }
     if (this.colorPickup && this.colorPickup.x < -this.colorPickup.radius) {
         this.colorPickup = null;
     }
@@ -258,6 +304,14 @@ Engine.prototype.updateWorld = function() {
         var newChunk = this.cG.generateChunk(lastCoord, this.r, this.g, this.b, this.distance, this.speed, this.gravity);
         for (var i=0; i < newChunk.length; i++)
             this.worldCoords.push(newChunk[i]);   
+    }
+    // add a new back point if needed
+    var lastBackCoord = this.backCoords[this.backCoords.length - 1];
+    if (lastBackCoord.x < getWidth()) {
+        this.backCoords.push({
+            x: lastBackCoord.x + 200, 
+            y: lastCoord.y - 0.1 * getHeight() - 0.5 * getHeight() * Math.random()
+        });
     }
     // generate a colour Pickup maybe
     if (!this.colorPickup && Math.random()*10000 + 4000 < this.timeSinceLastColor) {

@@ -215,9 +215,9 @@ Generator.prototype.generateBackground = function (w, h, blockSize, widthOffset,
     {
         for(var pX = 0; pX < w; pX += blockSize)
         {
-            r = 100 + 100 * this.getNoise( (widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
-            g = 50 + 100 * this.getNoise( (1000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
-            b = 100 + 100 * this.getNoise( (2000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
+            r = 150 + 75 * this.getNoise( (widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
+            g = 100 + 75 * this.getNoise( (1000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
+            b = 150 + 75 * this.getNoise( (2000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
             
             //do pixelsize x pixelsize
             for(var oY = 0; oY < blockSize; oY++)
