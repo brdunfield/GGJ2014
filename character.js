@@ -49,7 +49,7 @@ Character.prototype.update = function(totalMS, generator)
 Character.prototype.render = function(context) {
     
     context.save();
-    context.translate(this.x - this.w * 0.5, this.y - this.h - this.h * 0.2 * this.offsetMain);
+    context.translate(this.x - this.w * 0.5, this.y - this.h * 0.5 - this.h * 0.2 * this.offsetMain);
     if(this.imgBack != null)
     {
         context.drawImage(this.imgBack, 0, this.h * 0.1 + this.h * 0.5 * this.offsetBack);
