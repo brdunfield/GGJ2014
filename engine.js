@@ -112,7 +112,7 @@ Engine.prototype.animate = function(time) {
     }
     
     //update character and enemies
-    this.char.update(time, this.generator);
+    this.char.update(time, this.generator, this.enemies);
     this.enemies.update(time, this.generator);
     
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~

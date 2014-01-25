@@ -50,11 +50,19 @@ Character.prototype.defend = function(context){
 };
 
 
-Character.prototype.update = function(totalMS, generator)
+Character.prototype.update = function(totalMS, generator, enemies)
 {
     this.offsetBack = generator.getNoise( totalMS / 2000 );
     this.offsetFront = generator.getNoise( (totalMS + 50000) / 2100 );
     this.offsetMain = generator.getNoise( (totalMS + 50000) / 2100 );
+    
+    if(typeof(this.enemies) != 'undefined')
+    {
+        for(var i = 0; i < this.projectiles.length; i++)
+        {
+            enemies.checkProjectile(this.projectiles[i].position[0], this.projectiles[i].position[1]);
+        }
+    }
 }
 
 // ?

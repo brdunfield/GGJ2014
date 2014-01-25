@@ -47,6 +47,23 @@ Enemies.prototype.render = function(context)
     }
 }
 
+Enemies.prototype.checkProjectile = function(x, y)
+{
+    var e;
+    for(var i = this.list.length-1; i >= 0; --i)
+    {
+        e = this.list[i];
+        
+        if(e.x - e.w * 0.5 < x
+           && e.x + e.w * 0.5 > x
+           && e.y - e.h * 0.5 < y
+           && e.y + e.h * 0.5 > y)
+        {
+            this.list.splice(i, 1);
+        }
+    }
+}
+
 //translate all enemies by given value
 Enemies.prototype.translate = function(x, y)
 {
