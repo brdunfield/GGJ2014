@@ -24,34 +24,135 @@ Generator.prototype.generateCharacter = function(size, hue)
         ctxMain = imgMain.getContext('2d'),
         ctxFront = imgFront.getContext('2d');
     
+    //set image sizes
+    imgBack.width = imgMain.width = imgFront.width = size;
+    imgBack.height = imgMain.height = imgFront.height = size;
+    
+    //set colors for all layers
+    ctxBack.fillStyle = "hsl(" + hue + ", 90%, 40%)";
+    ctxBack.strokeStyle = "hsl(" + hue + ", 90%, 60%)";
+    ctxMain.fillStyle = "hsl(" + hue + ", 90%, 50%)";
+    ctxMain.strokeStyle = "hsl(" + hue + ", 90%, 30%)"; 
+    ctxFront.fillStyle = "hsl(" + hue + ", 90%, 60%)";
+    ctxFront.strokeStyle = "hsl(" + hue + ", 90%, 20%)";
+    
     /////////////////////////
     // generate main image //
+    /////////////////////////
     
-    ctxMain.fillStyle = "hsl(" + hue + "90%, 50%)";
-    
-    //generate player path
-    var numPoints = Math.floor(5 + Math.random() * 5);
+    var numPoints = Math.floor(5 + Math.random() * 25);
     var dA = Math.twoPI / numPoints,
-        maxDist = size/2,
+        maxDist = size * 0.5,
         dist, x, y;
     
     ctxMain.beginPath();
     for(var i = 0; i < numPoints; ++i)
     {
-        dist = 0.5 * maxDist + Math.random() * 0.5 * maxDist;
+        dist = 0.25 * maxDist + Math.random() * 0.75 * maxDist;
         x = size * 0.5 + Math.cos(-Math.PI + dA * i) * dist;
         y = size * 0.5 + Math.sin(-Math.PI + dA * i) * dist;
-        if(a = 0)
+        if(i == 0)
             ctxMain.moveTo(x, y);
         else
             ctxMain.lineTo(x, y);
     }
     ctxMain.closePath();
     ctxMain.fill();
+    ctxMain.stroke();
+    
+    //eyes
+    ctxMain.fillStyle = 'white';
+    ctxMain.beginPath();
+    
+    var rad1 = size * 0.06 + Math.random() * size * 0.06,
+        rad2 = size * 0.06 + Math.random() * size * 0.06,
+        pos1X = size * 0.5 + Math.random() * size * 0.125,
+        pos1Y = size * 0.25 + Math.random() * size * 0.125,
+        pos2X = size * 0.75 + Math.random() * size * 0.125,
+        pos2Y = size * 0.25 + Math.random() * size * 0.125;
+        
+    ctxMain.arc( pos1X, pos1Y, rad1, 0, Math.twoPI, false);
+    ctxMain.moveTo(pos2X + rad2, pos2Y);
+    ctxMain.arc( pos2X, pos2Y, rad2, 0, Math.twoPI, false);
+    ctxMain.fill();
+    ctxMain.stroke();
+    
+    //pupils
+    ctxMain.fillStyle = 'black';
+    ctxMain.beginPath();
+    
+    ctxMain.arc(pos1X - rad1 * 0.25 + Math.random() * rad1 * 0.5, 
+                pos1Y - rad1 * 0.25 + Math.random() * rad1 * 0.5, 
+                rad1 * 0.125 + Math.random() * rad1 * 0.125, 
+                0, 
+                Math.twoPI, 
+                false);
+    ctxMain.arc(pos2X - rad2 * 0.25 + Math.random() * rad2 * 0.5, 
+                pos2Y - rad2 * 0.25 + Math.random() * rad2 * 0.5, 
+                rad2 * 0.125 + Math.random() * rad2 * 0.125, 
+                0, 
+                Math.twoPI, 
+                false);
+    ctxMain.fill();
     
     /////////////////////////
+    // generate back image //
+    /////////////////////////
     
+    var handSize = size * 0.125 + Math.random() * size * 0.125;
+    numPoints = Math.floor(5 + Math.random() * 10);
+    dA = Math.twoPI / numPoints;
+    maxDist = handSize * 0.5;
+    
+    var oX = size * 0.125,
+        oY = size * 0.5;
+    
+    ctxMain.beginPath();
+    for(var i = 0; i < numPoints; ++i)
+    {
+        dist = 0.5 * maxDist + Math.random() * 0.5 * maxDist;
+        x = oX + Math.cos(-Math.PI + dA * i) * dist;
+        y = oY + Math.sin(-Math.PI + dA * i) * dist;
+        if(i == 0)
+            ctxBack.moveTo(x, y);
+        else
+            ctxBack.lineTo(x, y);
+    }
+    ctxBack.closePath();
+    ctxBack.fill();
+    ctxBack.stroke();
+    
+    //////////////////////////
+    // generate front image //
+    //////////////////////////
+    
+    var handSize = size * 0.125 + Math.random() * size * 0.125;
+    numPoints = Math.floor(5 + Math.random() * 10);
+    dA = Math.twoPI / numPoints;
+    maxDist = handSize * 0.5;
+    
+    var oX = size - size * 0.125,
+        oY = size * 0.5;
+    
+    ctxMain.beginPath();
+    for(var i = 0; i < numPoints; ++i)
+    {
+        dist = 0.5 * maxDist + Math.random() * 0.5 * maxDist;
+        x = oX + Math.cos(-Math.PI + dA * i) * dist;
+        y = oY + Math.sin(-Math.PI + dA * i) * dist;
+        if(i == 0)
+            ctxFront.moveTo(x, y);
+        else
+            ctxFront.lineTo(x, y);
+    }
+    ctxFront.closePath();
+    ctxFront.fill();
+    ctxFront.stroke();
+    
+    //set images on character
+    char.imgBack = imgBack;
     char.imgMain = imgMain;
+    char.imgFront = imgFront;
     
     return char;
 }
@@ -85,9 +186,9 @@ Generator.prototype.generateBackground = function (w, h, blockSize, noiseDetail)
     {
         for(var pX = 0; pX < w; pX += blockSize)
         {
-            r = 75 + 150 * this.perlin.noise( pX * 0.01, pY * 0.01 );
-            g = 75 + 150 * this.perlin.noise( pX * 0.01 + 1000, pY * 0.01 + 1000 );
-            b = 75 + 150 * this.perlin.noise( pX * 0.01 + 2000, pY * 0.01 + 2000 );
+            r = 75 + 150 * this.getNoise( pX * 0.01, pY * 0.01 );
+            g = 75 + 150 * this.getNoise( pX * 0.01 + 1000, pY * 0.01 + 1000 );
+            b = 75 + 150 * this.getNoise( pX * 0.01 + 2000, pY * 0.01 + 2000 );
             
             //do pixelsize x pixelsize
             for(var oY = 0; oY < blockSize; oY++)
@@ -124,5 +225,23 @@ Generator.prototype.generateBackground = function (w, h, blockSize, noiseDetail)
     //return separated image
     img.blend(1, 1, 1);
     return img;
+}
+
+//to access perlin noise generator
+// y and z are optional
+Generator.prototype.getNoise = function(x, y, z)
+{
+    if(typeof(x) != 'undefined')
+    {
+        if(typeof(y) != 'undefined')
+        {
+            if(typeof(z) != 'undefined')
+            {
+                return this.perlin.noise(x, y, z);
+            }
+            return this.perlin.noise(x, y, 0);
+        }
+        return this.perlin.noise(x, 0, 0);
+    }
 }
 

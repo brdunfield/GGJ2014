@@ -4,16 +4,28 @@ var Character = function(w, h) {
     this.y = getHeight() /2;
     this.x = 100;
     
-    if(typeof(w) == 'undefined') this.w = 100;
-    if(typeof(h) == 'undefined') this.h = 100;
+    if(typeof(w) == 'undefined') 
+        this.w = 100;
+    else 
+        this.w = w;
+    if(typeof(h) == 'undefined') 
+        this.h = 100;
+    else 
+        this.h = h;
     
     this.jumpV = 1;
     this.falling = null;
     this.climbBy = null;
     
+    //for images
     this.imgBack = null;
     this.imgMain = null;
     this.imgFront = null;
+    
+    //for animation
+    this.offsetBack = 0.5;
+    this.offsetFront = 0.5;
+    this.offsetMain = 0.5;
 };
 
 Character.prototype.jump = function() {
@@ -26,24 +38,37 @@ Character.prototype.attack = function() {
     
 };
 
+Character.prototype.update = function(totalMS, generator)
+{
+    this.offsetBack = generator.getNoise( totalMS / 2000 );
+    this.offsetFront = generator.getNoise( (totalMS + 50000) / 2100 );
+    this.offsetMain = generator.getNoise( (totalMS + 50000) / 2100 );
+}
+
 // ?
 Character.prototype.render = function(context) {
     
     context.save();
-    context.beginPath();
-    context.arc(this.x, this.y - this.h * 0.5, this.w * 0.5, 0, Math.twoPI, false);
-    context.fillStyle = '#75F';
-    context.fill();
-    
-    
+    context.translate(this.x - this.w * 0.5, this.y - this.h - this.h * 0.2 * this.offsetMain);
     if(this.imgBack != null)
     {
+        context.drawImage(this.imgBack, 0, this.h * 0.1 + this.h * 0.5 * this.offsetBack);
     }
     if(this.imgMain != null)
     {
+        context.drawImage(this.imgMain, 0, 0);
     }
+    else
+    {
+        //default draw
+        context.beginPath();
+        context.arc(this.x, this.y - this.h * 0.5, this.w * 0.5, 0, Math.twoPI, false);
+        context.fillStyle = '#75F';
+        context.fill();
+    }    
     if(this.imgFront != null)
     {
+        context.drawImage(this.imgFront, 0, this.h * 0.25 + this.h * 0.25 * this.offsetFront);
     }
     
     context.restore();

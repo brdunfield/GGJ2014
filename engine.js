@@ -82,6 +82,9 @@ Engine.prototype.animate = function(time) {
     this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame/1000);
     this.b = Math.max(0, this.b - this.colourDecay[2] * timeSinceLastFrame/1000);
     
+    //update character
+    this.char.update(time, this.generator);
+    
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~
     context.clearRect(0, 0, getWidth(), getHeight());
     
