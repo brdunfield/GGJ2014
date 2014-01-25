@@ -16,7 +16,7 @@ var Engine = function(canvasID) {
     
     // physics
     this.speed = 500; // px/s
-    this.gravity =  400; //px/s/s
+    this.gravity =  50; //px/s/s
     
     // game variables
     this.distance = 0;
@@ -31,8 +31,9 @@ var Engine = function(canvasID) {
     this.colorPickup = null;
     
     // world variables
-    this.worldCoords = [[0, getHeight()/2], [200, getHeight()/2]];
-    this.platformCoords = [];  
+    this.worldCoords = [[0, getHeight()/2], [200, getHeight()/2 + 50]];
+    this.platformCoords = [];
+    this.cG = new chunkGenerator();
     
     // Handlers
     
@@ -43,9 +44,6 @@ var Engine = function(canvasID) {
                 self.char.jump();
         }
     });
-    
-    //chunk generator
-    this.cGenerator = new chunkGenerator();
     
     //particle emitter stuff
     this.pEmitter = new particleEmitter(this.context, new Array(300,300), new Array(0,0), new Array(255,0,0));
@@ -72,7 +70,7 @@ Engine.prototype.animate = function(time) {
     this.updateWorld();
     this.translateWorld(timeSinceLastFrame);
     // gravity - fall until you hit a line
-    this.checkFalling();
+    this.checkFalling(timeSinceLastFrame);
     
     // collisions
     if (this.colorPickup) this.checkColourCollisions();
@@ -158,7 +156,9 @@ Engine.prototype.updateWorld = function() {
     // add a new world chunk if needed
     var lastCoord = this.worldCoords[this.worldCoords.length - 1];
     if (lastCoord[0] < getWidth()) {
-        this.worldCoords.push([lastCoord[0] + Math.random()*100 + 100, lastCoord[1] - (Math.random()*100 - 50)]);   
+        var newChunk = this.cG.generateChunk(lastCoord, this.r, this.g, this.b, this.distance, this.speed, this.gravity);
+        for (var i=0; i < newChunk.length; i++)
+            this.worldCoords.push(newChunk[i]);   
     }
     // generate a colour Pickup maybe
     if (!this.colorPickup && Math.random()*4000 + 2000 < this.timeSinceLastColor) {
@@ -193,7 +193,7 @@ Engine.prototype.checkColourCollisions = function() {
     }
 };
 
-Engine.prototype.checkFalling = function() {
+Engine.prototype.checkFalling = function(t) {
     // determine two points around the char to determine the line segment
     var leftPt, rightPt;
     for (var i = 0; i < this.worldCoords.length; i++) {
@@ -210,13 +210,17 @@ Engine.prototype.checkFalling = function() {
     var slope = (rightPt[1] - leftPt[1]) / (rightPt[0] - leftPt[0]);
     var dx = this.char.x - leftPt[0];
     //console.log("slope: " + slope);
-    if ((slope*dx + leftPt[1]) > this.char.y && !this.char.falling) {
+    var d = t*this.gravity / 1000; // how far the char would fall with gravity on this frame;
+    if ((slope*dx + leftPt[1]) - (this.char.y + 50) > d && !this.char.falling) {
         //console.log("Char needs to fall now");
         this.char.falling = true;
         this.char.jumpV = 0;
         this.char.climbBy = null;
-    } else if((slope*dx + leftPt[1]) < this.char.y) {
-        this.char.climbBy = (slope*dx + leftPt[1]) - this.char.y;
+    } else if ((slope*dx + leftPt[1]) > this.char.y + 50) {
+        this.char.climbBy = (slope*dx + leftPt[1]) - this.char.y - 50;;
+        this.falling = null;
+    } else if((slope*dx + leftPt[1]) < this.char.y + 50) {
+        this.char.climbBy = (slope*dx + leftPt[1]) - this.char.y - 50;
         this.char.falling = null;
     } else {
         this.char.falling = false;

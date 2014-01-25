@@ -31,7 +31,7 @@ var Character = function(w, h) {
 Character.prototype.jump = function() {
     var d = new Date();
     this.falling = true;
-    this.jumpV = 200;
+    this.jumpV = 20;
 };
 
 Character.prototype.attack = function() {
