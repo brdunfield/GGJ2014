@@ -1,3 +1,5 @@
+Math.twoPI = Math.PI * 2;
+
 var Engine = function(canvasID) {
     var self = this,
         canvas = document.getElementById(canvasID);
@@ -8,11 +10,14 @@ var Engine = function(canvasID) {
     this.startTime = 0;
     this.lastTime = 0;
     
+    //useful stuff
+    this.generator = new Generator();
+    
     // variables
     this.speed = 500; // px/s
     this.gravity = 100; //px/s/s
     this.distance = 0;
-    this.char = new Character();
+    this.char = this.generator.generateCharacter(100);
     
     this.colourDecay = [1, 1, 1]; // per second
     

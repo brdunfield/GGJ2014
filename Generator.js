@@ -3,6 +3,59 @@ function Generator()
     this.perlin = new ClassicalNoise();
 }
 
+//generates a new character object with randomy generated sprites
+//size -> character sprite width and height (must be no less than 10)
+//hue (optional) -> value from 0 - 360 to define color of character
+Generator.prototype.generateCharacter = function(size, hue)
+{
+    if( typeof(hue) == 'undefined' ) 
+        hue = Math.random() * 360;
+    else
+        hue = Math.min( 360, Math.max( 0, hue ) );
+    
+    //create charater
+    var char = new Character(size, size);
+    
+    //create three levels of canvas
+    var imgBack = document.createElement('canvas'),
+        imgMain = document.createElement('canvas'),
+        imgFront = document.createElement('canvas');
+    var ctxBack = imgBack.getContext('2d'),
+        ctxMain = imgMain.getContext('2d'),
+        ctxFront = imgFront.getContext('2d');
+    
+    /////////////////////////
+    // generate main image //
+    
+    ctxMain.fillStyle = "hsl(" + hue + "90%, 50%)";
+    
+    //generate player path
+    var numPoints = Math.floor(5 + Math.random() * 5);
+    var dA = Math.twoPI / numPoints,
+        maxDist = size/2,
+        dist, x, y;
+    
+    ctxMain.beginPath();
+    for(var i = 0; i < numPoints; ++i)
+    {
+        dist = 0.5 * maxDist + Math.random() * 0.5 * maxDist;
+        x = size * 0.5 + Math.cos(-Math.PI + dA * i) * dist;
+        y = size * 0.5 + Math.sin(-Math.PI + dA * i) * dist;
+        if(a = 0)
+            ctxMain.moveTo(x, y);
+        else
+            ctxMain.lineTo(x, y);
+    }
+    ctxMain.closePath();
+    ctxMain.fill();
+    
+    /////////////////////////
+    
+    char.imgMain = imgMain;
+    
+    return char;
+}
+
 //generates and returns a seperated image using perlin noise
 //w -> width
 //h -> height
