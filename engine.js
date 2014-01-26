@@ -25,8 +25,25 @@ Engine.prototype.init = function()
 {
     var self = this;
     
+    //pull down url
+    this.seed = [];
+    var url = window.location.href.split("?")[1];
+    url = url.split("&");
+    for(i in url)
+    {
+        var string = url[i].split("=")[1];
+        var nums = [];
+        for(i in string)
+        {
+            nums.push(string.charCodeAt(i));
+        }
+        this.seed.push(nums);
+    }
+    console.log(this.seed);
+    
+    
     //useful stuff
-    this.generator = new Generator();
+    this.generator = new Generator(this.seed);
     
     //graphics 
     this.jumpParticles = [];
