@@ -81,7 +81,7 @@ Engine.prototype.init = function()
     
     this.drawHeart(this.imgHeart);
     
-    this.colourDecay = [2, 2, 2]; // per second
+    this.colourDecay = [2, 2, 4]; // per second
     this.r = Math.random() * 100 + 50;
     this.g = Math.random() * 100 + 50;
     this.b = Math.random() * 100 + 50;
@@ -108,7 +108,7 @@ Engine.prototype.init = function()
             if (!self.char.falling || self.g >= 25){
                 if (self.char.falling) 
                 {
-                    if(self.g < 200)
+                    if(self.g < 215)
                         self.g -= 25;
                     //create particle emiter
                     var emitter = new particleEmitter(self.context, 'rect', [self.char.x, self.char.y + 50],
@@ -127,7 +127,7 @@ Engine.prototype.init = function()
             if(self.r > 5)
             {
                 self.char.attack(self.context);
-                if(self.r < 200)
+                if(self.r < 215)
                     self.r = Math.max(self.r - 5, 0);
             }
         }
@@ -141,7 +141,7 @@ Engine.prototype.init = function()
     window.addEventListener('keyup', function(e) {
         //defend - d
         if (e.keyCode == 68) {
-            self.colourDecay[2] = 2;
+            self.colourDecay[2] = 4;
             self.char.isDefending = false;
         }
     });
@@ -184,7 +184,7 @@ Engine.prototype.animate = function(time) {
     // Update colours
     if(this.colourDecay[0] > 2 && this.char.projectiles.length == 0) this.colourDecay[0] --;
     if(this.colourDecay[1] > 2 && !this.char.falling) this.colourDecay[1] --;
-    if(this.colourDecay[2] > 2 && this.char.shields.length == 0) this.colourDecay[2] --;
+    if(this.colourDecay[2] > 4 && this.char.shields.length == 0) this.colourDecay[2] --;
     
     this.r = Math.max(0, this.r - this.colourDecay[0] * timeSinceLastFrame * 0.001);
     this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame * 0.001);
@@ -192,11 +192,11 @@ Engine.prototype.animate = function(time) {
     
     if(this.b < 0)
     {
-        this.colourDecay[2] = 2;
+        this.colourDecay[2] = 4;
         this.char.isDefending = false;
         this.b = 0;
     }
-    else if(this.char.isDefending && this.b < 200)
+    else if(this.char.isDefending && this.b < 215)
     {
         this.colourDecay[2] = 20;
     }
@@ -759,8 +759,8 @@ Engine.prototype.drawUI = function(context) {
     context.strokeStyle = "#555";
     context.lineWidth = 3;
     context.beginPath();
-    context.moveTo(225, 10);
-    context.lineTo(225, 90);
+    context.moveTo(240, 10);
+    context.lineTo(240, 90);
     context.stroke();
     context.setLineDash([0]);
     context.restore();
