@@ -400,7 +400,7 @@ Engine.prototype.updateWorld = function() {
     
     //new way
     var gp;
-    for(var i = this.groundPolys.length -1; i >= 0; ++i)
+    for(var i = (this.groundPolys.length -1); i >= 0; i--)
     {
         gp = this.groundPolys[i];
         
@@ -534,7 +534,8 @@ Engine.prototype.getGroundIntersect = function(x, yThresh)
     {
         var newPoly = this.groundPolys[0].extend(this.cG, this.distance, this.speed, this.gravity);
         if (newPoly) {
-            this.groundPolys.push(newPoly);
+            for (var i=0; i < newPoly.length; i++)
+                this.groundPolys.push(newPoly[i]);
         }
     }
     
