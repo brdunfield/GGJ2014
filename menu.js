@@ -50,13 +50,14 @@ function loadNext(){
         $("#textbox").val("Now our hero needs a name");
         $("#textbox").removeClass("title");
         $("#textbox").addClass("name");
+        $("#textbox").select();
         switchEntry();
     }else if($("#textbox").hasClass("name")){
         charName = $("#textbox").val();
         
         //PASS gameName and charName to the game
         //------------------------
-        window.location = "index.html";
+        window.location = "index.html?game=" + gameName.replace(" ", "") + "&char=" + charName.replace(" ", "");
     }
 }
 
