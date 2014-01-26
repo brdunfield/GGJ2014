@@ -26,13 +26,14 @@ var Character = function(w, h, hue) {
     this.imgMain = null;
     this.imgFront = null;
     
-    //for animation
+    //for animationd
     this.offsetBack = 0.5;
     this.offsetFront = 0.5;
     this.offsetMain = 0.5;
     this.seed = Math.random() * 10000;
     
     //for attack and defense
+    this.isDefending = false;
     this.projectiles = [];
     this.shields = [];
 };
@@ -49,17 +50,16 @@ Character.prototype.attack = function(context) {
     }
 };
 
-Character.prototype.defend = function(context){
-    if(this.shields.length < 5){
-        this.shields.push(new particleEmitter(context, "ellipse", [this.x,this.y], [0,0], [5,5], "#00F", [80,80], 20, 5));
-    }
-};
-
-Character.prototype.update = function(totalMS, generator, enemies)
+Character.prototype.update = function(totalMS, generator, enemies, context)
 {
     this.offsetBack = generator.getNoise( totalMS / 2000 );
     this.offsetFront = generator.getNoise( (totalMS + 50000) / 2100 );
     this.offsetMain = generator.getNoise( (totalMS + 50000) / 2100 );
+    
+    if(this.isDefending && this.shields.length < 5)
+    {
+        this.shields.push(new particleEmitter(context, "ellipse", [this.x,this.y], [0,0], [5,5], "#00F", [80,80], 20, 5));
+    }
     
     //check for collisions with enemies
     if(typeof(enemies) != 'undefined')

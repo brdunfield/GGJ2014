@@ -97,32 +97,40 @@ Engine.prototype.init = function()
     
     this.cG = new chunkGenerator();
     // Handlers //
-    // Jump handler
-    window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 32 /*&& self.g != 0*/) {
-            if (!self.char.falling){
-                //if(self.colourDecay[1] == 2) self.colourDecay[1] += 10;
-                self.char.jump();
-            } else if (self.char.falling && self.g > 25) {
-                self.char.jump();
-                self.g -= 25;
-            }
-        }
-    });
     this.restartHandler = null;
     
     //Attack handler (F key)
     window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 70 && self.r != 0) {
-            if(self.colourDecay[0] == 2) self.colourDecay[0] += 5;
-            self.char.attack(self.context);
+        //jump - space
+        if (e.keyCode == 32 /*&& self.g != 0*/) {
+            if (!self.char.falling || self.g > 200){
+                self.char.jump();
+            } else if (self.char.falling && self.g >= 25) {
+                self.char.jump();
+                self.g -= 25;
+            }
+        }
+        //attack - f
+        else if (e.keyCode == 70) {
+            if(self.r > 5)
+            {
+                self.char.attack(self.context);
+                if(self.r < 200)
+                    self.r = Math.max(self.r - 5, 0);
+            }
+        }
+        //defend - d
+        else if (e.keyCode == 68&& self.b != 0) {
+            self.char.isDefending = true;
         }
     });
+    
     //Defend handler (D key)
-    window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 68&& self.b != 0) {
-            if(self.colourDecay[2] == 2) self.colourDecay[2] += 20;
-            self.char.defend(self.context);
+    window.addEventListener('keyup', function(e) {
+        //defend - d
+        if (e.keyCode == 68) {
+            self.colourDecay[2] = 2;
+            self.char.isDefending = false;
         }
     });
     
@@ -164,11 +172,23 @@ Engine.prototype.animate = function(time) {
     if(this.colourDecay[0] > 2 && this.char.projectiles.length == 0) this.colourDecay[0] --;
     if(this.colourDecay[1] > 2 && !this.char.falling) this.colourDecay[1] --;
     if(this.colourDecay[2] > 2 && this.char.shields.length == 0) this.colourDecay[2] --;
-    this.r = Math.max(0, this.r - this.colourDecay[0] * timeSinceLastFrame/1000);
-    this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame/1000);
-    this.b = Math.max(0, this.b - this.colourDecay[2] * timeSinceLastFrame/1000);
     
-    //update image color blending
+    this.r = Math.max(0, this.r - this.colourDecay[0] * timeSinceLastFrame * 0.001);
+    this.g = Math.max(0, this.g - this.colourDecay[1] * timeSinceLastFrame * 0.001);
+    this.b -=  this.colourDecay[2] * timeSinceLastFrame * 0.001;
+    
+    if(this.b < 0)
+    {
+        this.colourDecay[2] = 2;
+        this.char.isDefending = false;
+        this.b = 0;
+    }
+    else if(this.char.isDefending && this.b < 200)
+    {
+        this.colourDecay[2] = 20;
+    }
+    
+    //update image color blendingddddd
     var r = this.r / 255,
         g = this.g / 255,
         b = this.b / 255;
@@ -207,7 +227,7 @@ Engine.prototype.animate = function(time) {
     }
     
     //update character and enemies
-    this.char.update(time, this.generator, this.enemies);
+    this.char.update(time, this.generator, this.enemies, this.context);
     this.enemies.update(time, this.generator);
     
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~
@@ -453,7 +473,7 @@ Engine.prototype.updateWorld = function() {
         }
         
         //remove old
-        if (gp.u.length == 1 || gp.l[0].y < 0 || gp.u[1].y > getHeight() * 2) {
+        if (this.groundPolys.length > 1 && gp.u.length == 1 || gp.l[0].y < 0 || gp.u[1].y > getHeight() * 2) {
             this.groundPolys.splice(i, 1);
             continue;
         } else {
