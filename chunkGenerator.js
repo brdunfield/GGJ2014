@@ -79,14 +79,18 @@ chunkGenerator.prototype.generateFork = function(startPoint) {
 chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
     console.log("Generating Mountain");
     var result = {};
-    result.master = [];
+    result.upper = [];
+    result.lower =[];
     var peak = [startPoint.x + Math.random()*1000 +400, startPoint.y - Math.random()*400 - 100];
     var endX = peak[0] + Math.random()* 1000 + 400;
-    result.master.push({'x': peak[0], 
+    result.upper.push({'x': peak[0], 
                  'y': peak[1],
                  'damage': false });
-    result.master.push({'x': endX, 
+    result.upper.push({'x': endX, 
                  'y': peak[1] + Math.random()*(endX - peak[0])*maxSlope,
+                 'damage': false});
+    result.lower.push({'x': endX, 
+                 'y': 2*getHeight(),
                  'damage': false});
     
     this.lastChunk = "mountain";
@@ -94,35 +98,36 @@ chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
 };
 
 //make spikes
-//make mountain from last point
 chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
     var result = {};
     console.log("Generating Spikes");
-    result.master = []
-    result.master.push(startPoint);
+    result.upper = [];
+    result.lower = [];
+    result.upper.push(startPoint);
+    result.platform = null;
     var numSpikes = Math.round(Math.random() * ((maxJumpRange / 15)*2)) + 20;
     console.log("Max jump range: " + maxJumpRange + ", spike distance generated: " + numSpikes*15);
     
+    
     if (numSpikes > maxJumpRange/15) {
         // generate a platform
+        console.log("Platform");
         var startPoint = {'x': Math.random()*maxJumpRange/15 + startPoint.x,
                           'y': startPoint.y - 150,
                           'damage': false};
-        result.platform = {};
-        result.platform.platform =true;
-        result.platform.master = false;
-        var d = new Date();
-        result.platform.id = d.getTime();
-        result.platform.points = this.generatePlatform(startPoint, numSpikes/2*15);
+        result.platform = new GroundPoly(true, startPoint, 300);
     }
     
     for (var i = 0; i < numSpikes; i++) {
-        var spike = this.generateSpike(result.master[result.master.length-1]);
+        var spike = this.generateSpike(result.upper[result.upper.length-1]);
         for (var j=0; j < spike.length; j++) {
-            result.master.push(spike[j]);
+            result.upper.push(spike[j]);
         }
     }
-    result.master.splice(0,1);
+    result.upper.splice(0,1);
+    result.lower.push({'x': result.upper[result.upper.length -1], 
+                 'y': 2*getHeight(),
+                 'damage': false});
     this.lastChunk="spikes";
     return result;
 };
@@ -144,13 +149,18 @@ chunkGenerator.prototype.generateSpike = function(startPoint) {
 chunkGenerator.prototype.generateCliff = function(startPoint){
     console.log("Generating Cliff");
     var result = {};
-    result.master = [];
+    result.upper = [];
+    result.lower = [];
     var bottom = startPoint.y + Math.random()*100 + 100;
-    result.master.push({'x': startPoint.x, 
+    var endX = startPoint.x + Math.random(200) + 50;
+    result.upper.push({'x': startPoint.x, 
                  'y': bottom,
                  'damage': false});
-    result.master.push({'x': startPoint.x + Math.random(200) + 50, 
+    result.upper.push({'x': endX, 
                  'y': bottom,
+                 'damage': false});
+    result.lower.push({'x': endX, 
+                 'y': 2*getHeight(),
                  'damage': false});
     this.lastChunk="cliff";
     
@@ -160,10 +170,14 @@ chunkGenerator.prototype.generateCliff = function(startPoint){
 chunkGenerator.prototype.generateStraight = function(startPoint){
     console.log("Generating Straight");
     var result = {};
-    result.master = [];
-    
-    result.master.push({'x': startPoint.x + Math.random()*1000 + 500,
+    result.upper = [];
+    result.lower = [];
+    var endX = startPoint.x + Math.random()*1000 + 500;
+    result.upper.push({'x': endX,
                  'y': startPoint.y,
+                 'damage': false});
+    result.lower.push({'x': endX, 
+                 'y': 2*getHeight(),
                  'damage': false});
     this.lastChunk="straight";
     
