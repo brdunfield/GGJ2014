@@ -40,10 +40,12 @@ var Engine = function(canvasID) {
     this.timeSinceLastColor = 0;
     this.timeSinceLastParticle = 0;
     this.timeSinceLastDamage = 0;
+    this.timeSinceLastFork = 0;
     this.colorPickup = null;
     
     // world variables
-    this.worldCoords = [{'x': 0, 'y': getHeight()/2, 'damage': false}, {'x': 200, 'y': getHeight()/2 + 50, 'damage': false}];
+    this.world = [{'id': 1, 'master': true, 'platform': false,
+                  'points' : [{'x': 0, 'y': getHeight()/2 + 200, 'damage': false}, {'x': 200, 'y': getHeight()/2 + 250, 'damage': false}]}];
     this.platformCoords = [];
     this.cG = new chunkGenerator();
     
@@ -79,6 +81,7 @@ Engine.prototype.animate = function(time) {
     this.timeSinceLastColor += timeSinceLastFrame;
     this.timeSinceLastEnemy += timeSinceLastFrame;
     this.timeSinceLastDamage += timeSinceLastFrame;
+    this.timeSinceLastFork += timeSinceLastFrame;
     
     // Update ~~~~~~~~~~~~~~~~~~~
     this.distance += (this.speed * timeSinceLastFrame / 1000) / 500; // divide by initial speed as if it were a meter
@@ -146,21 +149,29 @@ Engine.prototype.animate = function(time) {
     
     // foreground
     //draw path for clipping
-    context.save();
-        context.beginPath();
-        context.moveTo(this.worldCoords[0].x, this.worldCoords[0].y);
-        for (var i=1; i < this.worldCoords.length; i++) {
-            context.lineTo(this.worldCoords[i].x, this.worldCoords[i].y);
-        }
-        context.lineTo(context.canvas.width, context.canvas.height);
-        context.lineTo(0, context.canvas.height);
-        context.closePath();
-        context.clip();
-        //draw background images
-        context.translate(this.offsetForeground, 0);
-        context.drawImage(this.imgForeground.getImage(), 0, 0);
-        context.drawImage(this.imgForegroundNext.getImage(), this.imgForeground.w, 0);
-    context.restore();
+    for (var line in this.world) {
+        var line1 = this.world[line];
+        context.strokeStyle = "#000";
+        context.save();
+            context.beginPath();
+            context.moveTo(line1.points[0].x, line1.points[0].y);
+            for (var i=1; i < line1.points.length; i++) {
+                context.lineTo(line1.points[i].x, line1.points[i].y);
+            }
+            if (line1.master) {
+                context.lineTo(context.canvas.width, context.canvas.height);
+                context.lineTo(0, context.canvas.height);
+                context.closePath();
+            }
+            context.clip();
+            context.lineWidth = '5';
+            context.stroke();
+            //draw background images
+            context.translate(this.offsetForeground, 0);
+            context.drawImage(this.imgForeground.getImage(), 0, 0);
+            context.drawImage(this.imgForegroundNext.getImage(), this.imgForeground.w, 0);
+        context.restore();
+    }
     
     if (this.colorPickup) { this.colorPickup.render(context); }
     
@@ -229,35 +240,53 @@ Engine.prototype.translateWorld = function(t) {
     }
 
     // translate world according to speed / falling speed
-    for (var i = 0; i < this.worldCoords.length; i++) {
-        // x
-        this.worldCoords[i].x += dX;
-        // y
-        this.worldCoords[i].y += dY;
+    for (var line in this.world) {
+        for (var i = 0; i < this.world[line].points.length; i++) {
+            // x
+            this.world[line].points[i].x += dX;
+            // y
+            this.world[line].points[i].y += dY;
+        }
+        // translate colorPickup
+        if (this.colorPickup) {
+            this.colorPickup.x += dX;
+            this.colorPickup.y += dY;
+        }
+        //translate enemies
+        this.enemies.translate(dX, dY);
     }
-    // translate colorPickup
-    if (this.colorPickup) {
-        this.colorPickup.x += dX;
-        this.colorPickup.y += dY;
-    }
-    //translate enemies
-    this.enemies.translate(dX, dY);
 };
 
 Engine.prototype.updateWorld = function() {
     // get rid of old coords
-    if (this.worldCoords[1].x < 0) {
-        this.worldCoords.splice(0,1);
+    var master;
+    for (var line in this.world) {
+        //if (this.world[line] === undefined || this.world[line].points.length < 2) {
+            //delete this.world[line];
+            //continue;
+        //}
+        if (this.world[line].master) master = this.world[line];
+        while(this.world[line].points[1].x < 0 ) {//|| this.world[line].points[1].y < 0 || this.world[line].points[1].y > getHeight()) {
+            this.world[line].points.splice(0,1);
+        }
     }
     if (this.colorPickup && this.colorPickup.x < -this.colorPickup.radius) {
         this.colorPickup = null;
     }
-    // add a new world chunk if needed
-    var lastCoord = this.worldCoords[this.worldCoords.length - 1];
+    // add a new world chunk to the master if needed
+    var lastCoord = master.points[master.points.length - 1];
     if (lastCoord.x < getWidth()) {
         var newChunk = this.cG.generateChunk(lastCoord, this.r, this.g, this.b, this.distance, this.speed, this.gravity);
-        for (var i=0; i < newChunk.length; i++)
-            this.worldCoords.push(newChunk[i]);   
+        for (var i=0; i < newChunk.master.length; i++)
+            master.points.push(newChunk.master[i]);
+        if (newChunk.platform)
+            this.world.push(newChunk[i].platform);
+    }
+    
+    // Add a fork maybe
+    if (Math.random()*10000 + 10000 < this.timeSinceLastFork) {
+        //this.world.push(this.cG.generateFork(lastCoord));
+        this.timeSinceLastFork = 0;
     }
     // generate a colour Pickup maybe
     if (!this.colorPickup && Math.random()*10000 + 4000 < this.timeSinceLastColor) {
@@ -269,13 +298,13 @@ Engine.prototype.updateWorld = function() {
             type = "green";
         } else { type = "blue"; }
         var x = this.context.canvas.width + 50;
-        this.colorPickup = new colourPickup(type, x, this.getGroundIntersect(x) - 50);
+        this.colorPickup = new colourPickup(type, x, this.getGroundIntersect(master,x) - 50);
         this.timeSinceLastColor = 0;
     }
     // generate an enemy maybe
     if (Math.random()*6000 + 1000 < this.timeSinceLastEnemy) {
         var x = this.context.canvas.width + 50;
-        this.enemies.spawn( x, this.getGroundIntersect(x) - 50, this.generator);
+        this.enemies.spawn( x, this.getGroundIntersect(master,x) - 50, this.generator);
         this.timeSinceLastEnemy = 0;
     }
 };
@@ -302,39 +331,49 @@ Engine.prototype.checkColourCollisions = function() {
 Engine.prototype.checkFalling = function(t) {
     // determine two points around the char to determine the line segment
     var leftPt, rightPt;
-    for (var i = 0; i < this.worldCoords.length; i++) {
-        if (this.worldCoords[i].x < this.char.x) leftPt = this.worldCoords[i];
+    var master;
+    var dGrav = t*this.gravity / 1000; // how far the char would fall with gravity on this frame;
+    var lineToCheck;
+    var distFromLine = 10000;
+    var groundY;
+    for (var line in this.world) {
+        if (this.world[line].master) master = this.world[line];
+        groundY = this.getGroundIntersect(this.world[line], this.char.x);
+        var dist = groundY - (this.char.y + 50);
+        if (dist < -100) continue; // line is above character - no ground collision
         
-        if (this.worldCoords[i].x > this.char.x) {
-            rightPt = this.worldCoords[i];
-            break;
+        // find closest line from distances 
+        if (dist < distFromLine) {
+            lineToCheck = line;
+            distFromLine = dist;
         }
     }
+    //if (dist < 0) return;
+    groundY = this.getGroundIntersect(this.world[lineToCheck], this.char.x);
     
-    if(!rightPt) return;
-    // determine how far away the char is from the line, and whether falling or climbing
-    var slope = (rightPt.y - leftPt.y) / (rightPt.x - leftPt.x);
-    var dx = this.char.x - leftPt.x;
-    var d = t*this.gravity / 1000; // how far the char would fall with gravity on this frame;
-    var distFromLine = (slope*dx + leftPt.y) - (this.char.y + 50);
-    
+    // assign new master
+    if (!this.world[lineToCheck].master) {
+        master.master = false;
+        this.world[lineToCheck].master = true;
+    }
+    /*
     if (rightPt.damage && leftPt.damage && distFromLine < 5) {
         //this.falling = null;
         if (this.timeSinceLastDamage > 1000) {
             this.char.hp --;
             this.timeSinceLastDamage = 0;
         }
-    } 
-    if ( distFromLine > d && !this.char.falling) {
+    } */
+    if ( distFromLine > dGrav && !this.char.falling) {
         //console.log("Char needs to fall now");
         this.char.falling = true;
         this.char.jumpV = 0;
         this.char.climbBy = null;
-    } else if ((slope*dx + leftPt.y) > this.char.y + 50) {
-        this.char.climbBy = (slope*dx + leftPt.y) - this.char.y - 50;;
+    } else if (groundY > this.char.y + 50) {
+        this.char.climbBy = groundY - this.char.y - 50;;
         this.falling = null;
-    } else if((slope*dx + leftPt.y) < this.char.y + 50) {
-        this.char.climbBy = (slope*dx + leftPt.y) - this.char.y - 50;
+    } else if(groundY < this.char.y + 50) {
+        this.char.climbBy = groundY - this.char.y - 50;
         this.char.falling = null;
     } else {
         this.char.falling = false;
@@ -342,27 +381,27 @@ Engine.prototype.checkFalling = function(t) {
     }  
 };
 
-Engine.prototype.getGroundIntersect = function(x)
+Engine.prototype.getGroundIntersect = function(ground, x)
 {
-    if( x < 0 ) this.worldCoords[0].y;
-    while( x > this.worldCoords[this.worldCoords.length-1].x)
+    if( x < 0 ) ground.points[0].y;
+    while( x > ground.points[ground.points.length-1].x)
     {
-        var newChunk = this.cG.generateChunk(this.worldCoords[this.worldCoords.length-1], 
+       var newChunk = this.cG.generateChunk(ground.points[ground.points.length-1], 
                                              this.r, this.g, this.b, 
                                              this.distance, this.speed, this.gravity);
-        for (var i=0; i < newChunk.length; i++)
-            this.worldCoords.push(newChunk[i]);
+        for (var i=0; i < newChunk.master.length; i++)
+            ground.points.push(newChunk.master[i]);
     }
     
     //find points around x value
     var l = null,
         r = null;
-    for (var i = 0; i < this.worldCoords.length; i++) 
+    for (var i = 0; i < ground.points.length; i++) 
     {
-        if (this.worldCoords[i].x > x && i > 0 ) 
+        if (ground.points[i].x > x && i > 0 ) 
         {
-            l = this.worldCoords[i-1];
-            r = this.worldCoords[i];
+            l = ground.points[i-1];
+            r = ground.points[i];
             break;
         }
     }
