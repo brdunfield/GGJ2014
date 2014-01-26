@@ -36,6 +36,11 @@ var Character = function(w, h, hue) {
     this.isDefending = false;
     this.projectiles = [];
     this.shields = [];
+    
+    this.hit = false;
+    this.swing = false;
+    this.swingCount = 0;
+    this.opacity = 1;
 };
 
 Character.prototype.jump = function() {
@@ -77,23 +82,44 @@ Character.prototype.update = function(totalMS, generator, enemies, context)
         if( enemies.checkProjectile(this.x + this.w * 0.5, this.y))
         {
             if(this.shields.length == 0)
-                this.hp--;
+                this.takeDamage(1);
         }
     }
 }
+Character.prototype.animateOpacity = function(){
+    if(this.opacity > 0){
+        this.opacity -= 0.1;
+    } else {
+        this.opacity = 1;
+        this.hit = false;
+    }
+};
+
+Character.prototype.takeDamage = function(damage){
+    this.hp -= damage;
+    this.hit = true;
+};
 
 // ?
 Character.prototype.render = function(context) {
+    if(this.hit)
+        this.animateOpacity();
     
     context.save();
     context.translate(this.x - this.w * 0.5, this.y - this.h * 0.5 - this.h * 0.2 * this.offsetMain);
     if(this.imgBack != null)
     {
+        context.save();
+        context.globalAlpha = this.opacity;
         context.drawImage(this.imgBack, 0, this.h * 0.1 + this.h * 0.5 * this.offsetBack);
+        context.restore();
     }
     if(this.imgMain != null)
     {
+        context.save();
+        context.globalAlpha = this.opacity;
         context.drawImage(this.imgMain, 0, 0);
+        context.restore();
     }
     else
     {
@@ -105,7 +131,10 @@ Character.prototype.render = function(context) {
     }    
     if(this.imgFront != null)
     {
+        context.save();
+        context.globalAlpha = this.opacity;
         context.drawImage(this.imgFront, 0, this.h * 0.25 + this.h * 0.25 * this.offsetFront);
+        context.restore();
     }
     
     context.restore();

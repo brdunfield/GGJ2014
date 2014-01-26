@@ -67,14 +67,15 @@ chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
     result.lower =[];
     var peak = [startPoint.x + Math.random()*1000 +400, startPoint.y - Math.random()*400 - 100];
     var endX = peak[0] + Math.random()* 1000 + 400;
+    var endY = peak[1] + Math.random()*(endX - peak[0])*maxSlope;
     result.upper.push({'x': peak[0], 
                  'y': peak[1],
                  'damage': false });
     result.upper.push({'x': endX, 
-                 'y': peak[1] + Math.random()*(endX - peak[0])*maxSlope,
+                 'y': endY,
                  'damage': false});
     result.lower.push({'x': endX, 
-                 'y': 2*getHeight(),
+                 'y': Math.max(2*getHeight(), endY + 100),
                  'damage': false});
     
     this.lastChunk = "mountain";
@@ -111,7 +112,7 @@ chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
     }
     result.upper.splice(0,1);
     result.lower.push({'x': result.upper[result.upper.length -1].x, 
-                 'y': 2*getHeight(),
+                 'y': Math.max(2*getHeight(), startPoint.y + 100),
                  'damage': false});
     this.lastChunk="spikes";
     return result;
@@ -145,7 +146,7 @@ chunkGenerator.prototype.generateCliff = function(startPoint){
                  'y': bottom,
                  'damage': false});
     result.lower.push({'x': endX, 
-                 'y': 2*getHeight(),
+                 'y': Math.max(2*getHeight(), bottom + 200),
                  'damage': false});
     this.lastChunk="cliff";
     
@@ -163,7 +164,7 @@ chunkGenerator.prototype.generateStraight = function(startPoint){
                  'y': startPoint.y,
                  'damage': false});
     result.lower.push({'x': endX, 
-                 'y': 2*getHeight(),
+                 'y': Math.max(2*getHeight(), startPoint.y + 100),
                  'damage': false});
     this.lastChunk="straight";
     
@@ -228,7 +229,7 @@ chunkGenerator.prototype.generateU = function(startPoint, maxJumpRange, maxSlope
                  'damage': false});
     
     result.lower.push({'x': startPoint.x + 1300,
-                 'y': 2*getHeight(),
+                 'y': Math.max(2*getHeight(), startPoint.y + 260),
                  'damage': false});
     
     var platformStart = {'x': startPoint.x + 500,
