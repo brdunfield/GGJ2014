@@ -588,7 +588,7 @@ Engine.prototype.checkFalling = function(t) {
     //look for damage
     if (this.getGroundDamage(this.char.x) && dist < 5) {
         if (this.timeSinceLastDamage > 1000 && this.char.shields.length == 0) {
-            this.char.hp --;
+            this.char.takeDamage(1);
             this.timeSinceLastDamage = 0;
         }
     } 
