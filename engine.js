@@ -79,10 +79,13 @@ Engine.prototype.init = function()
     // Handlers //
     // Jump handler
     window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 32 && self.g != 0) {
+        if (e.keyCode == 32 /*&& self.g != 0*/) {
             if (!self.char.falling){
-                if(self.colourDecay[1] == 2) self.colourDecay[1] += 10;
+                //if(self.colourDecay[1] == 2) self.colourDecay[1] += 10;
                 self.char.jump();
+            } else if (self.char.falling && self.g > 25) {
+                self.char.jump();
+                self.g -= 25;
             }
         }
     });
@@ -406,13 +409,16 @@ Engine.prototype.updateWorld = function() {
         {
             var newPoly = gp.extend(this.cG, this.distance, this.speed, this.gravity);
             if (newPoly) {
-                this.groundPolys.push(newPoly);
+                for (var i=0; i < newPoly.length; i++)
+                    this.groundPolys.push(newPoly[i]);
             }
         }
         
         //remove old
         if (gp.u.length == 1) {
-            delete gp;
+            delete this.groundPolys.splice(i, 1);
+            i--;
+            continue;
         } else {
             if( gp.u[1].x < 0 )
                 gp.u.splice(0, 1);
@@ -537,7 +543,8 @@ Engine.prototype.getGroundIntersect = function(x)
     {
         var newPoly = this.groundPolys[0].extend(this.cG, this.distance, this.speed, this.gravity);
         if (newPoly) {
-            this.groundPolys.push(newPoly);
+            for (var i=0; i < newPoly.length; i++)
+                this.groundPolys.push(newPoly[i]);
         }
     }
     

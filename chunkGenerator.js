@@ -5,7 +5,7 @@ var chunkGenerator = function(){
 
 chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, speed, gravity) {
     // TODO - algorithm to make this based on difficulty
-    
+    var difficulty = 1;
     
     // leave vStart as a power of 2 to save computation
     var vStart = Math.pow(speed, 2) + Math.pow(30, 2), // 20 is jumpV
@@ -16,7 +16,7 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     if (RNG < 0.20 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
     else if (RNG < 0.4 && this.lastChunk != "spikes" && dist > /*50*/ 5) return this.generateSpikes(lastPoint, maxJumpRange);
     else if (RNG < 0.60 && this.lastChunk != "cliff") return this.generateCliff(lastPoint);
-    else if (RNG < 0.80 && this.lastChunk != "u") return this.generateU(lastPoint, maxJumpRange, gravity/speed);
+    else if (RNG < 0.80 && this.lastChunk != "u") return this.generateU(lastPoint, maxJumpRange, gravity/speed, (dist > 20));
     else return this.generateStraight(lastPoint);
 };
 
@@ -98,9 +98,10 @@ chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
         // generate a platform
         console.log("Platform");
         var startPoint = {'x': Math.random() * maxJumpRange - 25 + startPoint.x,
-                          'y': startPoint.y - 150,
+                          'y': startPoint.y - 200,
                           'damage': false};
-        result.platform = new GroundPoly(true, startPoint, 300);
+        result.platform = [];
+        result.platform.push(new GroundPoly(true, startPoint, 300));
     }
     
     for (var i = 0; i < numSpikes; i++) {
@@ -110,7 +111,7 @@ chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
         }
     }
     result.upper.splice(0,1);
-    result.lower.push({'x': result.upper[result.upper.length -1], 
+    result.lower.push({'x': result.upper[result.upper.length -1].x, 
                  'y': 2*getHeight(),
                  'damage': false});
     this.lastChunk="spikes";
@@ -170,20 +171,37 @@ chunkGenerator.prototype.generateStraight = function(startPoint){
     var RNG = Math.random();
     if (RNG < 0.2) {
         var startPoint = {'x': Math.random()*1000 + startPoint.x,
-                          'y': startPoint.y - 150,
+                          'y': startPoint.y - 200,
                           'damage': false};
-        this.platform = result.platform = new GroundPoly(true, startPoint, 300);
+        this.platform = [];
+        this.platform.push(result.platform = new GroundPoly(true, startPoint, 300));
+        if (RNG < 0.1) {
+            startPoint = {'x': startPoint.x + 500,
+                          'y': startPoint.y - 400,
+                          'damage': false};
+            this.platform.push(result.platform = new GroundPoly(true, startPoint, 300));
+        }
     }
     
     return result;
 };
 
-chunkGenerator.prototype.generateU = function(startPoint, maxJumpRange, maxSlope) {
+chunkGenerator.prototype.generateU = function(startPoint, maxJumpRange, maxSlope, spikes) {
     console.log("Generating U");
     var result = {};
     result.upper = [];
     result.lower = [];
     result.platform = null;
+    
+    /*
+    var uSpikes = false;
+    var platformSpikes = false;
+    if (spikes) {
+        var RNG = Math.random();
+        if (RNG < 0.4) uSpikes = true;
+        else if(RNG < 0.8) platformSpikes = true;
+        else {platformSpikes=true; uSpikes = true;}
+    }*/
     
     result.upper.push({'x': startPoint.x + 100,
                  'y': startPoint.y,
@@ -191,6 +209,18 @@ chunkGenerator.prototype.generateU = function(startPoint, maxJumpRange, maxSlope
     result.upper.push({'x': startPoint.x + 400,
                  'y': startPoint.y + 250,
                  'damage': false});
+    if (spikes) {
+        var numSpikes = 600 / 15;
+        for (var i=0; i < numSpikes; i++) {
+            var spike = this.generateSpike({'x': startPoint.x + 400 + 15*i,
+                                            'y': startPoint.y + 250,
+                                            'damage': true});
+            for (var j=0; j < spike.length; j++) {
+                result.upper.push(spike[j]);
+            }
+        }
+    }
+    
     result.upper.push({'x': startPoint.x + 1000,
                  'y': startPoint.y + 250,
                  'damage': false});
@@ -205,7 +235,8 @@ chunkGenerator.prototype.generateU = function(startPoint, maxJumpRange, maxSlope
     var platformStart = {'x': startPoint.x + 500,
                  'y': startPoint.y -50,
                  'damage': false}
-    result.platform = new GroundPoly(true, platformStart, 300);
+    result.platform = [];
+    result.platform.push(new GroundPoly(true, platformStart, 300));
     this.lastChunk="u";
     return result;
 };
