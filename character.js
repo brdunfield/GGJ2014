@@ -4,7 +4,7 @@ var Character = function(w, h, hue) {
     this.y = getHeight() /2;
     this.x = 100;
     
-    this.hp = 3;
+    this.hp = 5;
     
     if(typeof(w) == 'undefined') 
         this.w = 100;
