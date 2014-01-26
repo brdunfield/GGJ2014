@@ -33,6 +33,8 @@ Engine.prototype.init = function()
     this.offsetBackground = 0;
     this.numScrollsForeground = 0;
     this.numScrollsBackground = 0;
+    this.imgToBlendForeground = 0;
+    this.imgToBlendBackground = 0;
     this.numGroundImgs = 10;
     this.groundpixelSize = 30;
     this.groundImgWidth = Math.ceil(Math.ceil(getWidth() / this.numGroundImgs/ this.groundpixelSize) * this.groundpixelSize);
@@ -171,14 +173,15 @@ Engine.prototype.animate = function(time) {
         g = this.g / 255,
         b = this.b / 255;
     this.imgSky.blend(r, g, b);
-    for(var i = 0; i < this.imgsForeground.length; ++i)
-    {
-        this.imgsForeground[i].blend(r, g, b);
-    }
-    for(var i = 0; i < this.imgsBackground.length; ++i)
-    {
-        this.imgsBackground[i].blend(r, g, b);
-    }
+
+    this.imgsForeground[this.imgToBlendForeground++].blend(r, g, b);
+    if( this.imgToBlendForeground >= this.imgsForeground.length )
+        this.imgToBlendForeground = 0;
+    
+    this.imgsBackground[this.imgToBlendBackground++].blend(r, g, b);
+    if( this.imgToBlendBackground >= this.imgsBackground.length )
+        this.imgToBlendBackground = 0;
+    
     //image positions
     this.offsetForeground -= this.speed * timeSinceLastFrame * 0.001;
     if(this.offsetForeground <= -this.groundImgWidth)
