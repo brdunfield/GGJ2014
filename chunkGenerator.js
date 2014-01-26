@@ -12,31 +12,15 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     var maxJumpRange = vStart * 2 * Math.sin(theta) * Math.cos(theta) / gravity;
     console.log(maxJumpRange);
     var RNG = Math.random();
-    if (RNG < 0.25 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
-    else if (RNG < 0.5 && this.lastChunk != "spikes" && dist > /*50*/ 5) return this.generateSpikes(lastPoint, maxJumpRange);
-    else if (RNG < 0.75 && this.lastChunk != "cliff") return this.generateCliff(lastPoint);
+    if (RNG < 0.20 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
+    else if (RNG < 0.4 && this.lastChunk != "spikes" && dist > /*50*/ 5) return this.generateSpikes(lastPoint, maxJumpRange);
+    else if (RNG < 0.60 && this.lastChunk != "cliff") return this.generateCliff(lastPoint);
+    else if (RNG < 0.80) return this.generateU(lastPoint, maxJumpRange, gravity/speed);
     else return this.generateStraight(lastPoint);
 };
 
 chunkGenerator.prototype.generatePlatform = function(startPoint, width) {
-    var points = [];
-    points.push({'x': startPoint.x, 
-                 'y': startPoint.y,
-                 'damage': false });
-    points.push({'x': startPoint.x, 
-                 'y': startPoint.y - 50, 
-                 'damage': false });
-    points.push({'x': startPoint.x + width, 
-                 'y': startPoint.y - 50,
-                 'damage': false });
-    points.push({'x': startPoint.x + width, 
-                 'y': startPoint.y,
-                 'damage': false });
-    points.push({'x': startPoint.x, 
-                 'y': startPoint.y,
-                 'damage': false });
     
-    return points;
 };
 
 chunkGenerator.prototype.generateFork = function(startPoint) {
@@ -112,7 +96,7 @@ chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
     if (numSpikes > maxJumpRange/15) {
         // generate a platform
         console.log("Platform");
-        var startPoint = {'x': Math.random()*maxJumpRange/15 + startPoint.x,
+        var startPoint = {'x': Math.random() * maxJumpRange - 25 + startPoint.x,
                           'y': startPoint.y - 150,
                           'damage': false};
         result.platform = new GroundPoly(true, startPoint, 300);
@@ -151,7 +135,7 @@ chunkGenerator.prototype.generateCliff = function(startPoint){
     var result = {};
     result.upper = [];
     result.lower = [];
-    var bottom = startPoint.y + Math.random()*100 + 100;
+    var bottom = startPoint.y + Math.random()*300 + 100;
     var endX = startPoint.x + Math.random(200) + 50;
     result.upper.push({'x': startPoint.x, 
                  'y': bottom,
@@ -172,6 +156,7 @@ chunkGenerator.prototype.generateStraight = function(startPoint){
     var result = {};
     result.upper = [];
     result.lower = [];
+    result.platform = null;
     var endX = startPoint.x + Math.random()*1000 + 500;
     result.upper.push({'x': endX,
                  'y': startPoint.y,
@@ -181,5 +166,44 @@ chunkGenerator.prototype.generateStraight = function(startPoint){
                  'damage': false});
     this.lastChunk="straight";
     
+    var RNG = Math.random();
+    if (RNG < 0.2) {
+        var startPoint = {'x': Math.random()*1000 + startPoint.x,
+                          'y': startPoint.y - 150,
+                          'damage': false};
+        this.platform = result.platform = new GroundPoly(true, startPoint, 300);
+    }
+    
+    return result;
+};
+
+chunkGenerator.prototype.generateU = function(startPoint, maxJumpRange, maxSlope) {
+    console.log("Generating U");
+    var result = {};
+    result.upper = [];
+    result.lower = [];
+    result.platform = null;
+    
+    result.upper.push({'x': startPoint.x + 100,
+                 'y': startPoint.y,
+                 'damage': false});
+    result.upper.push({'x': startPoint.x + 400,
+                 'y': startPoint.y + 250,
+                 'damage': false});
+    result.upper.push({'x': startPoint.x + 1000,
+                 'y': startPoint.y + 250,
+                 'damage': false});
+    result.upper.push({'x': startPoint.x + 1300,
+                 'y': startPoint.y,
+                 'damage': false});
+    
+    result.lower.push({'x': startPoint.x + 1300,
+                 'y': 2*getHeight(),
+                 'damage': false});
+    
+    var platformStart = {'x': startPoint.x + 500,
+                 'y': startPoint.y -50,
+                 'damage': false}
+    result.platform = new GroundPoly(true, platformStart, 300);
     return result;
 };
