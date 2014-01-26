@@ -380,8 +380,7 @@ Engine.prototype.animate = function(time) {
         
         this.restartHandler = document.getElementById("canvas").addEventListener('click', function(e) {
             if (e.clientX > getWidth() *0.25 && e.clientX < getWidth() *0.75 && e.clientY > getHeight()/2 + 50 && e.clientY < getWidth()/2 + 100) {
-                self = new Engine("canvas");
-                self.start();
+                window.location = "menu.html";
             }
         });
         return;
@@ -459,12 +458,17 @@ Engine.prototype.updateWorld = function() {
     
     // add a fork if necessary
     if (this.cG.lastChunk == "straight" && this.timeSinceLastFork > Math.random() * 5000 + 5000) {
-        this.groundPolys.push(this.cG.generateFork({'x':getWidth(), 'y':getHeight()/2, 'damage':false}));
+        this.groundPolys.push(this.cG.generateFork({'x':getWidth(), 'y':this.getGroundIntersect(getWidth()) - 200 , 'damage':false}));
         this.timeSinceLastFork = 0;
     }
     
     //new way
     var gp;
+    var notplatformGPcount = 0;
+    for(var k = (this.groundPolys.length -1); k >= 0; k--) {
+        if (!this.groundPolys[k].isPlatform)
+            notplatformGPcount ++;
+    }
     for(var i = (this.groundPolys.length -1); i >= 0; i--)
     {
         gp = this.groundPolys[i];
@@ -480,10 +484,11 @@ Engine.prototype.updateWorld = function() {
         }
         
         //remove old
-        if (this.groundPolys.length > 1 && gp.u.length == 1 || gp.l[0].y < 0 || gp.u[1].y > getHeight() * 2) {
+        if (notplatformGPcount > 1 && (gp.u.length == 1 || gp.l[0].y < 0 || gp.u[1].y > getHeight() * 2)) {
             this.groundPolys.splice(i, 1);
+            notplatformGPcount --;
             continue;
-        } else {
+        } else if(gp.u.length > 2) {
             if( gp.u[1].x < 0 )
                 gp.u.splice(0, 1);
             if( gp.l[1].x < 0 )
@@ -559,7 +564,7 @@ Engine.prototype.checkFalling = function(t) {
     
     //look for damage
     if (this.getGroundDamage(this.char.x) && dist < 5) {
-        if (this.timeSinceLastDamage > 1000) {
+        if (this.timeSinceLastDamage > 1000 && this.char.shields.length == 0) {
             this.char.hp --;
             this.timeSinceLastDamage = 0;
         }
@@ -595,13 +600,17 @@ Engine.prototype.getGroundIntersect = function(x, yThresh)
 {
     if(typeof(yThresh) == 'undefined') yThresh = 0;
     
-    if( x < 0 ) return this.groundPolys[0].u[0].y;
-    while( x > this.groundPolys[0].lastUpper.x)
-    {
-        var newPoly = this.groundPolys[0].extend(this.cG, this.distance, this.speed, this.gravity);
-        if (newPoly) {
-            for (var i=0; i < newPoly.length; i++)
-                this.groundPolys.push(newPoly[i]);
+    for (var i= this.groundPolys.length - 1; i >= 0; i--) {
+    
+        if (this.groundPolys[i].isPlatform) continue;
+        //if( x < 0 ) return this.groundPolys[i].u[i].y;
+        while( x > this.groundPolys[i].lastUpper.x)
+        {
+            var newPoly = this.groundPolys[i].extend(this.cG, this.distance, this.speed, this.gravity);
+            if (newPoly) {
+                for (var j=0; j < newPoly.length; j++)
+                    this.groundPolys.push(newPoly[j]);
+            }
         }
     }
     
@@ -648,13 +657,16 @@ Engine.prototype.getGroundIntersect = function(x, yThresh)
 
 Engine.prototype.getGroundDamage = function(x)
 {
-    if( x < 0 ) return this.groundPolys[0].u[0].y;
-    while( x > this.groundPolys[0].lastUpper.x)
-    {
-        var newPoly = this.groundPolys[0].extend(this.cG, this.distance, this.speed, this.gravity);
-        if (newPoly) {
-            for (var i=0; i < newPoly.length; i++)
-                this.groundPolys.push(newPoly[i]);
+    for (var i= this.groundPolys.length - 1; i >= 0; i--) {
+        if (this.groundPolys[i].isPlatform) continue;
+        //if( x < 0 ) return this.groundPolys[0].u[0].y;
+        while( x > this.groundPolys[i].lastUpper.x)
+        {
+            var newPoly = this.groundPolys[i].extend(this.cG, this.distance, this.speed, this.gravity);
+            if (newPoly) {
+                for (var j=0; j < newPoly.length; j++)
+                    this.groundPolys.push(newPoly[j]);
+            }
         }
     }
     
@@ -698,9 +710,9 @@ Engine.prototype.drawUI = function(context) {
     context.fillText(Math.round(this.score), getWidth()/2, 40);
     
     context.beginPath();
-    context.rect(40, 18, 255, 15);
-    context.rect(40, 38, 255, 15);
-    context.rect(40, 58, 255, 15);
+    context.rect(25, 18, 255, 15);
+    context.rect(25, 38, 255, 15);
+    context.rect(25, 58, 255, 15);
     context.strokeStyle = "#fff";
     context.lineWidth = 1;
     context.stroke();
