@@ -1,5 +1,5 @@
 //emitter to place at a location
-var particleEmitter = function(context, type, position, velocity, particleVelocity, color, size, rate, maxParticles, life){
+var particleEmitter = function(context, type, position, velocity, particleVelocity, color, size, rate, maxParticles, centralParticle){
     this.context = context;
     this.type = type;
     this.position = position;
@@ -9,6 +9,7 @@ var particleEmitter = function(context, type, position, velocity, particleVeloci
     this.rate = rate;
     this.size = size;
     this.maxParticles = maxParticles;
+    this.centralParticle = (typeof(centralParticle) == 'undefined') ? true : centralParticle;
     
     this.particles = new Array();
 }
@@ -32,7 +33,7 @@ particleEmitter.prototype.run = function(time){
     
     
     //draw the projectile
-    if(this.type == "rect"){
+    if(this.centralParticle){
         this.context.save();
         this.context.fillStyle = this.color;
         this.context.globalAlpha = 0.9;

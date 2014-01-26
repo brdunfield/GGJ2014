@@ -29,6 +29,7 @@ Engine.prototype.init = function()
     this.generator = new Generator();
     
     //graphics 
+    this.jumpParticles = [];
     this.offsetForeground = 0;
     this.offsetBackground = 0;
     this.numScrollsForeground = 0;
@@ -103,11 +104,21 @@ Engine.prototype.init = function()
     window.addEventListener('keydown', function(e) {
         //jump - space
         if (e.keyCode == 32 /*&& self.g != 0*/) {
-            if (!self.char.falling || self.g > 200){
+            if (!self.char.falling || self.g >= 25){
+                if (self.char.falling) 
+                {
+                    if(self.g < 200)
+                        self.g -= 25;
+                    //create particle emiter
+                    var emitter = new particleEmitter(self.context, 'rect', [self.char.x, self.char.y + 50],
+                                                      [0,0], [10,10], "green", [6,6], 20, 10, false);
+                    for(var i = 0; i < 10; i++)
+                        emitter.makeParticle();
+                    
+                    emitter.time = self.lastTime;
+                    self.jumpParticles.push(emitter);
+                }
                 self.char.jump();
-            } else if (self.char.falling && self.g >= 25) {
-                self.char.jump();
-                self.g -= 25;
             }
         }
         //attack - f
@@ -302,6 +313,11 @@ Engine.prototype.animate = function(time) {
     if (this.colorPickup) { this.colorPickup.render(context); }
     
     //particle emitter stuff
+    //char jumps
+    for(var i =0 ; i < this.jumpParticles.length; i++)
+    {
+        this.jumpParticles[i].run();
+    }
     //character projectiles
     this.timeSinceLastParticle += timeSinceLastFrame;
     if(this.char.projectiles.length !=0 || this.char.shields.length != 0){
@@ -437,6 +453,13 @@ Engine.prototype.translateWorld = function(t) {
     {
         bp.l[i].x += dX;
         bp.l[i].y += dY;
+    }
+    
+    //jump emitters
+    for(var i = 0; i < this.jumpParticles.length; i++)
+    {
+        //this.jumpParticles[i].position[0] += dX;
+        //this.jumpParticles[i].position[1] += dY;
     }
 
     // translate colorPickup
