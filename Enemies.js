@@ -60,8 +60,10 @@ Enemies.prototype.checkProjectile = function(x, y)
            && e.y + e.h * 0.5 > y)
         {
             this.list.splice(i, 1);
+            return true;
         }
     }
+    return false;
 }
 
 //translate all enemies by given value

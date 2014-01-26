@@ -60,10 +60,17 @@ Character.prototype.update = function(totalMS, generator, enemies)
     //check for collisions with enemies
     if(typeof(enemies) != 'undefined')
     {
-        for(var i = 0; i < this.projectiles.length; i++)
+        //check projectile collisions
+        for(var i = this.projectiles.length - 1; i >= 0 ; --i)
         {
-            enemies.checkProjectile(this.projectiles[i].position[0], this.projectiles[i].position[1]);
+            if(enemies.checkProjectile(this.projectiles[i].position[0], this.projectiles[i].position[1]))
+            {
+                this.projectiles.splice(i, 1);
+            }
         }
+        //check my collision
+        if(enemies.checkProjectile(this.x + this.w * 0.5, this.y))
+            this.hp--;
     }
 }
 

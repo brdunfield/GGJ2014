@@ -8,6 +8,19 @@ var Engine = function(canvasID) {
     canvas.height = getHeight();
     this.context = canvas.getContext('2d');
     
+    //draw loading screen//
+    this.context.fillStyle = "rgba(0, 0, 0, 0.8)";
+    this.context.fillRect(0, 0, getWidth(), getHeight());
+    this.context.font = "50px Arial";
+    this.context.fillStyle = "#EEE";
+    this.context.textAlign = "center";
+    this.context.fillText("Loading...", getWidth()*0.5, getHeight()*0.5);
+    
+    window.requestAnimationFrame(this.init);
+}
+ 
+Engine.prototype.init = function()
+{
     //useful stuff
     this.generator = new Generator();
     
@@ -31,6 +44,7 @@ var Engine = function(canvasID) {
     this.gravity =  50; //px/s/s
     
     // game variables
+    this.lost = false;
     this.distance = 0;
     this.char = this.generator.generateCharacter(100);
     this.enemies = new Enemies();
@@ -83,6 +97,7 @@ Engine.prototype.start = function() {
     var d = new Date();
     this.startTime = d.getTime();
     this.restartHandler = null;
+    
     window.requestAnimationFrame(function (time) {
         self.animate.call(self, time);
     });
@@ -116,11 +131,11 @@ Engine.prototype.animate = function(time) {
     var r = this.r / 255,
         g = this.g / 255,
         b = this.b / 255;
-    this.imgSky.blend(r * r, g * g, b * b);
-    this.imgForeground.blend(r * r, g * g, b * b);
-    this.imgForegroundNext.blend(r * r, g * g, b * b);
-    this.imgBackground.blend(r * r, g * g, b * b);
-    this.imgBackgroundNext.blend(r * r, g * g, b * b);
+    this.imgSky.blend(r, g, b);
+    this.imgForeground.blend(r, g, b);
+    this.imgForegroundNext.blend(r, g, b);
+    this.imgBackground.blend(r, g, b);
+    this.imgBackgroundNext.blend(r, g, b);
     //image positions
     this.offsetForeground -= this.speed * timeSinceLastFrame * 0.001;
     if(this.offsetForeground <= -context.canvas.width)
@@ -151,29 +166,6 @@ Engine.prototype.animate = function(time) {
     
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~
     context.clearRect(0, 0, getWidth(), getHeight());
-    
-    if (this.char.hp <= 0) {
-        context.font = "50px Arial";
-        context.fillStyle = "#000";
-        context.textAlign = "center";
-        context.fillText("Game Over.", getWidth()*0.5, getHeight()*0.5);
-        
-        context.rect(getWidth()*0.25, getHeight()/2 + 50, getWidth() *0.5, 50);
-        context.fillStyle = 'green';
-        context.fill();
-        
-        context.font = "18px Arial";
-        context.fillStyle="#000";
-        context.fillText("Play Again", getWidth() *0.5, getHeight()/2 + 80);
-        
-        this.restartHandler = document.getElementById("canvas").addEventListener('click', function(e) {
-            if (e.clientX > getWidth() / 2 && e.clientX < getWidth() / 2 + 300 && e.clientY > getHeight()/2 + 50 && e.clientY < getWidth()/2 + 100) {
-                self = new Engine("canvas");
-                self.start();
-            }
-        });
-        return;
-    }
     
     //draw sky
     context.drawImage(this.imgSky.getImage(), 0, 0);
@@ -258,6 +250,34 @@ Engine.prototype.animate = function(time) {
     this.drawUI(context);
     var fps = Math.round(1000 / timeSinceLastFrame);
     context.fillText(fps, getWidth() - 100, 100);
+    
+    //draw end screen
+    if (this.char.hp <= 0) 
+    {
+        context.fillStyle = "rgba(0, 0, 0, 0.8)";
+        context.fillRect(0, 0, getWidth(), getHeight());
+        
+        context.font = "50px Arial";
+        context.fillStyle = "#EEE";
+        context.textAlign = "center";
+        context.fillText("Game Over.", getWidth()*0.5, getHeight()*0.5);
+        
+        context.rect(getWidth()*0.25, getHeight()/2 + 50, getWidth() *0.5, 50);
+        context.fillStyle = "hsl(" + this.char.hue + ", 90%, 60%)";
+        context.fill();
+        
+        context.font = "18px Arial";
+        context.fillStyle= "hsl(" + this.char.hue + ", 90%, 20%)";;
+        context.fillText("Play Again", getWidth() *0.5, getHeight()/2 + 80);
+        
+        this.restartHandler = document.getElementById("canvas").addEventListener('click', function(e) {
+            if (e.clientX > getWidth() *0.25 && e.clientX < getWidth() *0.75 && e.clientY > getHeight()/2 + 50 && e.clientY < getWidth()/2 + 100) {
+                self = new Engine("canvas");
+                self.start();
+            }
+        });
+        return;
+    }
     
     // call next frame
     this.lastTime = time;
