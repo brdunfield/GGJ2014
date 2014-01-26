@@ -189,11 +189,15 @@ Generator.prototype.generateCharacter = function(size, enemy, hue)
 //h -> height
 //blockSize -> number of screen pixels per color block
 //widthOffset (optional) -> use to offset noise x values by factor of width
-//noise detail (optional) -> smaller is smoother noise
-Generator.prototype.generateBackground = function (w, h, blockSize, widthOffset, noiseDetail)
+//noiseDetail (optional) -> smaller is smoother noise
+//baseColor (optional) -> allows for darker or lighter images
+//maxColor (optional) -> allows for darker or lighter images
+Generator.prototype.generateBackground = function (w, h, blockSize, widthOffset, noiseDetail, baseColor, maxColor)
 {
     if( typeof(noiseDetail) == 'undefined' ) noiseDetail = 0.05;
     if( typeof(widthOffset) == 'undefined' ) widthOffset = 0;
+    if( typeof(baseColor) == 'undefined' ) baseColor = 0;
+    if( typeof(maxColor) == 'undefined' ) maxColor = 255;
     img = new SeparatedImage(w, h);
     
     //get drawing contexts for each image
@@ -215,9 +219,9 @@ Generator.prototype.generateBackground = function (w, h, blockSize, widthOffset,
     {
         for(var pX = 0; pX < w; pX += blockSize)
         {
-            r = 100 + 100 * this.getNoise( (widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
-            g = 50 + 100 * this.getNoise( (1000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
-            b = 100 + 100 * this.getNoise( (2000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
+            r = baseColor + (maxColor - baseColor) * this.getNoise( (widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
+            g = baseColor + (maxColor - baseColor) * this.getNoise( (1000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
+            b = baseColor + (maxColor - baseColor) * this.getNoise( (2000 + widthOffset * w + pX) * noiseDetail, pY * noiseDetail );
             
             //do pixelsize x pixelsize
             for(var oY = 0; oY < blockSize; oY++)
