@@ -31,12 +31,27 @@ Engine.prototype.init = function()
     //graphics 
     this.offsetForeground = 0;
     this.offsetBackground = 0;
-    this.numScrollsForeground = 1;
-    this.numScrollsBackground = 1;
-    this.imgForeground = this.generator.generateBackground(canvas.width, canvas.height, 30, 0, 0.05, 50, 150);
-    this.imgForegroundNext = this.generator.generateBackground(canvas.width, canvas.height, 30, 1, 0.05, 50, 150);
-    this.imgBackground = this.generator.generateBackground(canvas.width, canvas.height, 10, 0, 0.05, 175, 250);
-    this.imgBackgroundNext = this.generator.generateBackground(canvas.width, canvas.height, 10, 1, 0.05, 175, 250);
+    this.numScrollsForeground = 0;
+    this.numScrollsBackground = 0;
+    this.numGroundImgs = 10;
+    
+    this.imgsForeground = [];
+    this.imgsBackground = [];
+    for(var i = 0; i < this.numGroundImgs; i++)
+    {
+        this.imgsForeground.push(this.generator.generateBackground(
+                                                    canvas.width / (this.numGroundImgs-1),
+                                                    canvas.height, 
+                                                    30, 
+                                                    this.numScrollsForeground++, 
+                                                    0.05, 50, 150));
+        this.imgsBackground.push(this.generator.generateBackground(
+                                                    canvas.width / (this.numGroundImgs-1), 
+                                                    canvas.height, 
+                                                    10, 
+                                                    this.numScrollsBackground++, 
+                                                    0.05, 175, 250));
+    }
     this.imgSky = this.generator.generateBackground(canvas.width, canvas.height, 1, 1, 0.005, 200, 255);
     //heart image
     this.imgHeart = document.createElement('canvas');
@@ -152,32 +167,36 @@ Engine.prototype.animate = function(time) {
         g = this.g / 255,
         b = this.b / 255;
     this.imgSky.blend(r, g, b);
-    this.imgForeground.blend(r, g, b);
-    this.imgForegroundNext.blend(r, g, b);
-    this.imgBackground.blend(r, g, b);
-    this.imgBackgroundNext.blend(r, g, b);
+    for(var i = 0; i < this.imgsForeground.length; ++i)
+    {
+        this.imgsForeground[i].blend(r, g, b);
+    }
+    for(var i = 0; i < this.imgsBackground.length; ++i)
+    {
+        this.imgsBackground[i].blend(r, g, b);
+    }
     //image positions
     this.offsetForeground -= this.speed * timeSinceLastFrame * 0.001;
-    if(this.offsetForeground <= -context.canvas.width)
+    if(this.offsetForeground <= -getWidth() / this.numGroundImgs)
     {
         this.offsetForeground = 0;
-        this.imgForeground = this.imgForegroundNext;
-        this.imgForegroundNext = this.generator.generateBackground(this.imgForeground.w, 
-                                                                   this.imgForeground.h, 
+        this.imgsForeground.splice(0, 1);
+        this.imgsForeground.push(this.generator.generateBackground(getWidth() / this.numGroundImgs, 
+                                                                   getHeight(), 
                                                                    30, 
-                                                                   ++this.numScrollsForeground, 
-                                                                   0.05, 50, 150);
+                                                                   this.numScrollsForeground++, 
+                                                                   0.05, 50, 150));
     }
     this.offsetBackground -= this.speed * timeSinceLastFrame * 0.001 * 0.3;
-    if(this.offsetBackground <= -context.canvas.width)
+    if(this.offsetBackground <= -getWidth() / this.numGroundImgs)
     {
         this.offsetBackground = 0;
-        this.imgBackground = this.imgBackgroundNext;
-        this.imgBackgroundNext = this.generator.generateBackground(this.imgBackground.w, 
-                                                                   this.imgBackground.h, 
+        this.imgsBackground.splice(0, 1);
+        this.imgsBackground.push(this.generator.generateBackground(getWidth() / this.numGroundImgs, 
+                                                                   getHeight(), 
                                                                    10, 
-                                                                   ++this.numScrollsBackground, 
-                                                                   0.05, 175, 250);
+                                                                   this.numScrollsBackground++, 
+                                                                   0.05, 175, 250));
     }
     
     //update character and enemies
@@ -212,8 +231,11 @@ Engine.prototype.animate = function(time) {
         context.clip();
         //draw background images
         context.translate(this.offsetBackground, 0);
-        context.drawImage(this.imgBackground.getImage(), 0, 0);
-        context.drawImage(this.imgBackgroundNext.getImage(), this.imgBackground.w, 0);
+        for(i in this.imgsBackground)
+        {
+            context.translate(i * getWidth() / this.numGroundImgs, 0);
+            context.drawImage(this.imgsBackground[i].getImage(), 0, 0);
+        }
     context.restore();
     
     // foreground
@@ -243,8 +265,11 @@ Engine.prototype.animate = function(time) {
         context.clip();
         //draw foreground images
         context.translate(this.offsetForeground, 0);
-        context.drawImage(this.imgForeground.getImage(), 0, 0);
-        context.drawImage(this.imgForegroundNext.getImage(), this.imgForeground.w, 0);
+        for(i in this.imgsForeground)
+        {
+            context.translate(i * getWidth() / this.numGroundImgs, 0);
+            context.drawImage(this.imgsForeground[i].getImage(), 0, 0);
+        }
     context.restore();
     
     if (this.colorPickup) { this.colorPickup.render(context); }
