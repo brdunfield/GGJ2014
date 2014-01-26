@@ -50,6 +50,7 @@ function loadNext(){
         $("#textbox").val("Now our hero needs a name");
         $("#textbox").removeClass("title");
         $("#textbox").addClass("name");
+        $("#textbox").select();
         switchEntry();
     }else if($("#textbox").hasClass("name")){
         charName = $("#textbox").val();
