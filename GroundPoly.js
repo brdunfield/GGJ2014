@@ -17,10 +17,12 @@ function GroundPoly(isPlatform, startPt, width)
     }
     else
     {
-        this.lastUpper = point(0, getHeight() * 0.5, false);
-        this.lastLower = point(0, getHeight() * 2, false);
-        this.upper.push(this.lastUpper);
-        this.lower.push(this.lastLower);
+        if (!startPt) {
+            this.lastUpper = point(0, getHeight() * 0.5, false);
+            this.lastLower = point(0, getHeight() * 2, false);
+            this.upper.push(this.lastUpper);
+            this.lower.push(this.lastLower);
+        }
     }
     
     this.isPlatform = isPlatform;

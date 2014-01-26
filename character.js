@@ -40,7 +40,7 @@ var Character = function(w, h, hue) {
 Character.prototype.jump = function() {
     var d = new Date();
     this.falling = true;
-    this.jumpV = 20;
+    this.jumpV = 30;
 };
 
 Character.prototype.attack = function(context) {
