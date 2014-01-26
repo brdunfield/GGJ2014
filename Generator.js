@@ -16,7 +16,7 @@ Generator.prototype.generateCharacter = function(size, enemy, hue)
     if( typeof(enemy) == 'undefined' ) enemy = false;
     
     //create charater
-    var char = new Character(size, size);
+    var char = new Character(size, size, hue);
     
     //create three levels of canvas
     var imgBack = document.createElement('canvas'),
