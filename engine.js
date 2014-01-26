@@ -56,10 +56,20 @@ var Engine = function(canvasID) {
                 self.char.jump();
         }
     });
+    //Attack handler (F key)
+    window.addEventListener('keydown', function(e) {
+        if (e.keyCode == 70) {
+            self.char.attack(self.context);
+        }
+    });
+    //Defend handler (D key)
+    window.addEventListener('keydown', function(e) {
+        if (e.keyCode == 68) {
+            self.char.defend(self.context);
+        }
+    });
+
     this.restartHandler = null;
-    
-    //particle emitter stuff
-    this.pEmitter = new particleEmitter(this.context, new Array(300,300), new Array(0,0), new Array(255,0,0));
 };
 
 Engine.prototype.start = function() {
