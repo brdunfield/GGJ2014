@@ -420,10 +420,7 @@ Engine.prototype.updateWorld = function() {
     //add new
     while( bp.lastUpper.x < getWidth() )
     {
-        var newPoly = bp.extend(this.cG, this.distance, this.speed, this.gravity);
-        if (newPoly) {
-            this.groundPolys.push(newPoly);
-        }
+        bp.extend(this.cG, this.distance, this.speed, this.gravity);
     }
     //remove old
     if (bp.u.length == 0) {
@@ -435,6 +432,7 @@ Engine.prototype.updateWorld = function() {
             bp.l.splice(0, 1);
     }
     
+    if (this.colorPickup && this.colorPickup.x < -100) this.colorPickup = null;
     // generate a colour Pickup maybe
     if (!this.colorPickup && Math.random()*10000 + 4000 < this.timeSinceLastColor) {
         var typeRNG = Math.random();
@@ -449,7 +447,7 @@ Engine.prototype.updateWorld = function() {
         this.timeSinceLastColor = 0;
     }
     // generate an enemy maybe
-    if (Math.random()*6000 + 1000 < this.timeSinceLastEnemy) {
+    if (Math.random()*(12000 - this.speed*2) + 2000 - this.speed < this.timeSinceLastEnemy) {
         var x = this.context.canvas.width + 50;
         this.enemies.spawn( x, this.getGroundIntersect(x) - 50, this.generator);
         this.timeSinceLastEnemy = 0;
