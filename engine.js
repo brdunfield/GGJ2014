@@ -79,7 +79,7 @@ Engine.prototype.init = function()
     // Handlers //
     // Jump handler
     window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 32) {
+        if (e.keyCode == 32 && self.g != 0) {
             if (!self.char.falling){
                 if(self.colourDecay[1] == 2) self.colourDecay[1] += 10;
                 self.char.jump();
@@ -90,14 +90,14 @@ Engine.prototype.init = function()
     
     //Attack handler (F key)
     window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 70) {
+        if (e.keyCode == 70 && self.r != 0) {
             if(self.colourDecay[0] == 2) self.colourDecay[0] += 5;
             self.char.attack(self.context);
         }
     });
     //Defend handler (D key)
     window.addEventListener('keydown', function(e) {
-        if (e.keyCode == 68) {
+        if (e.keyCode == 68&& self.b != 0) {
             if(self.colourDecay[2] == 2) self.colourDecay[2] += 20;
             self.char.defend(self.context);
         }
