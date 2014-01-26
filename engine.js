@@ -400,7 +400,7 @@ Engine.prototype.updateWorld = function() {
     
     //new way
     var gp;
-    for(var i = 0; i < this.groundPolys.length; ++i)
+    for(var i = this.groundPolys.length -1; i >= 0; ++i)
     {
         gp = this.groundPolys[i];
         
@@ -416,8 +416,7 @@ Engine.prototype.updateWorld = function() {
         
         //remove old
         if (gp.u.length == 1) {
-            delete this.groundPolys.splice(i, 1);
-            i--;
+            this.groundPolys.splice(i, 1);
             continue;
         } else {
             if( gp.u[1].x < 0 )
