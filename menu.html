@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Colour Game</title>
+    <link rel="stylesheet" href="menu.css">
+    <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript" src="libs/perlin-noise-classical.js"></script>
+    <script type="text/javascript" src="libs/perlin-noise-simplex.js"></script>
+    <script type="text/javascript" src="SeparatedImage.js"></script>
+    <script type="text/javascript" src="Generator.js"></script>
+    <script src="menu.js"></script>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="center">
+        <h1 id="title"></h1>
+        <h1 id="cursor">_</h1>
+        <form id="textbox" class="title">
+            <input type="text" name="entry" width="500px" height="50px" autofocus value="This game needs a name">
+        </form>
+        <button onclick="loadNext()">Next</button>
+    </div>
+    
+    <footer>
+        <h2>Created by</h2>
+        <h2>Andrew Brough Ryan Bottriell Bethany Dunfield Lukundu Lako</h2>
+    </footer>
+</body>
+</html>

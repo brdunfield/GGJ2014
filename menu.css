@@ -1,0 +1,38 @@
+body{
+    margin:0;
+    overflow:hidden;
+    background-color:black;
+    text-align:center;
+    font-family: sans-serif;
+}
+
+h1{
+    color:white;
+    font-size:7em;
+    display:inline;
+}
+h2{
+    color:white;
+    font-size:1em;
+}
+
+footer{
+    position:absolute;
+    bottom:0;
+    width:100%;
+}
+
+#center{
+    position:absolute;
+    margin:auto;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    
+    height:400px;
+}
+button{
+    display:block;
+    margin:auto;
+}
