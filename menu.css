@@ -11,6 +11,16 @@ h1{
     font-size:7em;
     display:inline;
 }
+h2{
+    color:white;
+    font-size:1em;
+}
+
+footer{
+    position:absolute;
+    bottom:0;
+    width:100%;
+}
 
 #center{
     position:absolute;
@@ -21,4 +31,8 @@ h1{
     right:0;
     
     height:400px;
+}
+button{
+    display:block;
+    margin:auto;
 }
