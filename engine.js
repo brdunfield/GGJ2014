@@ -87,7 +87,9 @@ Engine.prototype.animate = function(time) {
     this.translateWorld(timeSinceLastFrame);
     // gravity - fall until you hit a line
     this.checkFalling(timeSinceLastFrame);
-	this.gametrack();
+    
+    //call to game track to start game sound 
+    this.gametrack();
     
     // collisions
     if (this.colorPickup) this.checkColourCollisions();
@@ -251,15 +253,14 @@ Engine.prototype.translateWorld = function(t) {
         // An error occurred while loading audio.
     }
 
-	this.fallsound = function(){
+   this.fallsound = function(){
     	var note = createjs.Sound.createInstance("fall");
 		    note.setVolume(Math.random()*0.01 + 0.01); 
 			note.play();
 	}
 	//game track sound 
-	this.gametrack = function(){// generates track based on the range of sample set to a pattern -- you can adjust the pattern as like
+    this.gametrack = function(){// generates track based on the range of sample set to a pattern -- you can adjust the pattern as like
 
-		
 		 	for(var n = 0; n < 16; n++ ){
 				if(n == Math.round(Math.random()*15)){
 					var lowrange= Math.round(Math.random()*12 + 8);  
@@ -282,6 +283,8 @@ Engine.prototype.translateWorld = function(t) {
 				}
 			}
 	}
+	
+	//---------- end of music section --------
 	
 };
 Engine.prototype.updateWorld = function() {
@@ -361,11 +364,12 @@ Engine.prototype.checkFalling = function(t) {
     if (rightPt.damage && leftPt.damage && distFromLine < 5) {
         //this.falling = null;
         if (this.timeSinceLastDamage > 1000) {
-			//damage sound fx
+			//damage sound fx--------------------------------------------------------
 			var fx= "damagefx"; 
 			var note3 = createjs.Sound.createInstance(fx.toString());
 			note3.setVolume(0.5);
 			note3.play();
+			// end of damage sound fx--------------------------------------------------------
             this.char.hp --;
             this.timeSinceLastDamage = 0;     
         }
@@ -446,7 +450,7 @@ Engine.prototype.drawHeart = function(context, startPoint) {
         context.stroke();
     context.restore();
 }
-//create music list 
+//create music list -----------------------------------------------------------
 var assetsPath = "assets/";
 
 var manifest = [//full list of all sample audio-- !lack of range
@@ -472,12 +476,14 @@ var manifest = [//full list of all sample audio-- !lack of range
 	
       ]
 
- // Instantiate a queue to preload our assets
+ // Instantiate a queue to preload assets
  queue = new createjs.LoadQueue(true, assetsPath);
  createjs.Sound.alternateExtensions = ["mp3"];	// add other extensions to try loading if the src file extension is not 
  queue.installPlugin(createjs.Sound);
  queue.addEventListener("error",Engine.MhandleFileError);
  queue.loadManifest(manifest);
+
+// end of create music list -----------------------------------------------------------
 
 
 /* ~~ Helper Functions ~~ */
