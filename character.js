@@ -76,7 +76,7 @@ Character.prototype.update = function(totalMS, generator, enemies)
         if( enemies.checkProjectile(this.x + this.w * 0.5, this.y))
         {
             if(this.shields.length == 0)
-                this.hp--;
+                //this.hp--;
         }
     }
 }
