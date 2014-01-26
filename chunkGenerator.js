@@ -7,9 +7,9 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     // TODO - algorithm to make this based on difficulty
     
     // leave vStart as a power of 2 to save computation
-    var vStart = Math.pow(speed, 2) + Math.pow(50, 2),
-        theta = Math.asin(50/speed);
-    var maxJumpRange = vStart * Math.sin(2*theta) / gravity;
+    var vStart = Math.pow(speed, 2) + Math.pow(20, 2), // 20 is jumpV
+        theta = Math.asin(20/speed);
+    var maxJumpRange = vStart * 2 * Math.sin(theta) * Math.cos(theta) / gravity;
     console.log(maxJumpRange);
     var RNG = Math.random();
     if (RNG < 0.25 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
@@ -18,14 +18,13 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     else return this.generateStraight(lastPoint);
 };
 
-chunkGenerator.prototype.generatePlatform = function(startPoint) {
+chunkGenerator.prototype.generatePlatform = function(startPoint, width) {
     var points = [];
-    var width = Math.random() * 300 + 100;
     points.push({'x': startPoint.x, 
                  'y': startPoint.y,
                  'damage': false });
     points.push({'x': startPoint.x, 
-                 'y': startPoint.y - 50,
+                 'y': startPoint.y - 50, 
                  'damage': false });
     points.push({'x': startPoint.x + width, 
                  'y': startPoint.y - 50,
@@ -42,56 +41,90 @@ chunkGenerator.prototype.generatePlatform = function(startPoint) {
 
 chunkGenerator.prototype.generateFork = function(startPoint) {
     console.log("Generating Fork");
-    var points = [];
+    var line = {}
+    line.points = [];
+    var d = new Date();
+    line.id = d.getTime();
+    line.master = false;
+    line.platform = false;
     
-    points.push({'x': startPoint.x, 
-                 'y': startPoint.y - 200,
+    line.points.push({'x': startPoint.x, 
+                 'y': startPoint.y - 150,
                  'damage': false });
-    points.push({'x': startPoint.x + 500, 
-                 'y': startPoint.y - 200,
+    line.points.push({'x': startPoint.x + 500, 
+                 'y': startPoint.y - 150,
                  'damage': false });
-    points.push({'x': startPoint.x + 500, 
-                 'y': startPoint.y - 400,
+    line.points.push({'x': startPoint.x + 500, 
+                 'y': startPoint.y - 300,
                  'damage': false });
-    points.push({'x': startPoint.x + 1000, 
-                 'y': startPoint.y - 400,
+    line.points.push({'x': startPoint.x + 1000, 
+                 'y': startPoint.y - 300,
                  'damage': false });
-    return points;
+    line.points.push({'x': startPoint.x + 1000, 
+                 'y': startPoint.y - 450,
+                 'damage': false });
+    line.points.push({'x': startPoint.x + 1500, 
+                 'y': startPoint.y - 450,
+                 'damage': false });
+    line.points.push({'x': startPoint.x + 1500, 
+                 'y': startPoint.y - 600,
+                 'damage': false });
+    line.points.push({'x': startPoint.x + 2000, 
+                 'y': startPoint.y - 600,
+                 'damage': false });
+    return line;
 };
 
 //make mountain from last point
 chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
     console.log("Generating Mountain");
-    var points = [];
+    var result = {};
+    result.master = [];
     var peak = [startPoint.x + Math.random()*1000 +400, startPoint.y - Math.random()*400 - 100];
     var endX = peak[0] + Math.random()* 1000 + 400;
-    points.push({'x': peak[0], 
+    result.master.push({'x': peak[0], 
                  'y': peak[1],
                  'damage': false });
-    points.push({'x': endX, 
+    result.master.push({'x': endX, 
                  'y': peak[1] + Math.random()*(endX - peak[0])*maxSlope,
                  'damage': false});
     
     this.lastChunk = "mountain";
-    return points;
+    return result;
 };
 
 //make spikes
 //make mountain from last point
 chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
+    var result = {};
     console.log("Generating Spikes");
-    var points = [];
-    points.push(startPoint);
-    var numSpikes = Math.round(Math.random() * ((maxJumpRange / 15) - 6)) + 5;
+    result.master = []
+    result.master.push(startPoint);
+    var numSpikes = Math.round(Math.random() * ((maxJumpRange / 15)*2)) + 20;
+    console.log("Max jump range: " + maxJumpRange + ", spike distance generated: " + numSpikes*15);
+    
+    if (numSpikes > maxJumpRange/15) {
+        // generate a platform
+        var startPoint = {'x': Math.random()*maxJumpRange/15 + startPoint.x,
+                          'y': startPoint.y - 150,
+                          'damage': false};
+        result.platform = {};
+        result.platform.platform =true;
+        result.platform.master = false;
+        var d = new Date();
+        result.platform.id = d.getTime();
+        result.platform.points = this.generatePlatform(startPoint, numSpikes/2*15);
+    }
+    
     for (var i = 0; i < numSpikes; i++) {
-        var spike = this.generateSpike(points[points.length-1]);
+        var spike = this.generateSpike(result.master[result.master.length-1]);
         for (var j=0; j < spike.length; j++) {
-            points.push(spike[j]);
+            result.master.push(spike[j]);
         }
     }
-    points.splice(0,1);
+    result.master.splice(0,1);
     this.lastChunk="spikes";
-    return points;
+    return result;
 };
 
 chunkGenerator.prototype.generateSpike = function(startPoint) {
@@ -110,27 +143,29 @@ chunkGenerator.prototype.generateSpike = function(startPoint) {
 
 chunkGenerator.prototype.generateCliff = function(startPoint){
     console.log("Generating Cliff");
-    var points = [];
+    var result = {};
+    result.master = [];
     var bottom = startPoint.y + Math.random()*100 + 100;
-    points.push({'x': startPoint.x, 
+    result.master.push({'x': startPoint.x, 
                  'y': bottom,
                  'damage': false});
-    points.push({'x': startPoint.x + Math.random(200) + 50, 
+    result.master.push({'x': startPoint.x + Math.random(200) + 50, 
                  'y': bottom,
                  'damage': false});
     this.lastChunk="cliff";
     
-    return points;
+    return result;
 };
 
 chunkGenerator.prototype.generateStraight = function(startPoint){
     console.log("Generating Straight");
-    var points = [];
+    var result = {};
+    result.master = [];
     
-    points.push({'x': startPoint.x + Math.random()*1000 + 500,
+    result.master.push({'x': startPoint.x + Math.random()*1000 + 500,
                  'y': startPoint.y,
                  'damage': false});
     this.lastChunk="straight";
     
-    return points;
+    return result;
 };

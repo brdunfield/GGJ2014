@@ -1,11 +1,10 @@
 //emitter to place at a location
-var particleEmitter = function(context, type, position, velocity, particleVelocity, hue, size, rate, maxParticles, life){
+var particleEmitter = function(context, position, velocity, particleVelocity, colour, size, rate, maxParticles){
     this.context = context;
-    this.type = type;
     this.position = position;
     this.velocity = velocity;
     this.particleVelocity = particleVelocity;
-    this.hue = hue;
+    this.colour = colour;
     this.rate = rate;
     this.size = size;
     this.maxParticles = maxParticles;
@@ -14,7 +13,7 @@ var particleEmitter = function(context, type, position, velocity, particleVeloci
 }
 
 particleEmitter.prototype.makeParticle = function(){
-    this.particles.push(new particle(this.context, this.type, this.position, this.particleVelocity, this.hue, this.size));
+    this.particles.push(new particleSquare(this.context, this.position, this.particleVelocity, this.colour, this.size));
 }
 
 particleEmitter.prototype.run = function(time){
@@ -38,45 +37,32 @@ particleEmitter.prototype.run = function(time){
 
 
 //individual particle
-var particle = function(context, type, origin, velocity, hue, size){
+var particleSquare = function(context, origin, velocity, colour, size){
     this.context = context;
-    this.type = type;
     this.position = new Array();
     this.position[0] = origin[0];
     this.position[1] = origin[1];
-    this.rotation = 0;
+    this.rotation = new Array();
+    this.rotation[0] = Math.random();
+    this.rotation[1] = Math.random();
     this.velocity = new Array();
     this.velocity[0] = Math.floor((Math.random()*velocity[0])-velocity[0]/2);
     this.velocity[1] = Math.floor((Math.random()*velocity[1])-velocity[1]/2);
-    this.hue = hue;
+    this.colour = colour;
     this.size = size;
 }
 
-particle.prototype.update = function(){
+particleSquare.prototype.update = function(){
     this.position[0] += this.velocity[0];
     this.position[1] += this.velocity[1];
     this.rotation[0] += 0.1;
     this.rotation[1] += 0.1;
 }
-particle.prototype.drawRect = function(){
-    this.context.fillStyle = "hsla(" + this.hue + ", 100%, 20%, 0.5)";
-    this.context.strokeStyle = null;
-    this.context.fillRect(this.position[0], this.position[1], this.size[0], this.size[1]);
+particleSquare.prototype.draw = function(){
+    this.context.fillStyle = "rgb(" + Math.round(this.colour[0]) + ", " + Math.round(this.colour[1]) + ", " + Math.round(this.colour[2]) + ")";
+    this.context.fillRect(this.position[0], this.position[1], this.size, this.size);
 }
-particle.prototype.drawEllipse = function(){
-    this.context.beginPath();
-    this.context.fillStyle = "hsla(" + this.hue + ", 90%, 40%, 0.5)";
-    this.context.strokeStyle = 'black';
-    this.context.ellipse(this.position[0], this.position[1], this.size[0], this.size[1], this.rotation, 0, 2*Math.PI, false);
-    this.context.fill();
-    this.context.closePath();
-}
-
-particle.prototype.run = function(){
+particleSquare.prototype.run = function(){
     this.update();
-    //pick a rect or an ellipse
-    if(this.type=="ellipse") this.drawEllipse();
-    else if(this.type=="rect") this.drawRect();
+    this.draw();
 }
-
-
