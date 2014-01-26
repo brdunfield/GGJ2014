@@ -11,7 +11,7 @@ var Engine = function(canvasID) {
     //draw loading screen//
     this.context.fillStyle = "rgba(0, 0, 0, 0.8)";
     this.context.fillRect(0, 0, getWidth(), getHeight());
-    this.context.font = "50px Arial";
+    this.context.font = "50px Impact";
     this.context.fillStyle = "#EEE";
     this.context.textAlign = "center";
     this.context.fillText("Loading...", getWidth()*0.5, getHeight()*0.5);
@@ -29,13 +29,14 @@ Engine.prototype.init = function()
     this.generator = new Generator();
     
     //graphics 
+    this.jumpParticles = [];
     this.offsetForeground = 0;
     this.offsetBackground = 0;
     this.numScrollsForeground = 0;
     this.numScrollsBackground = 0;
     this.imgToBlendForeground = 0;
     this.imgToBlendBackground = 0;
-    this.numGroundImgs = 10;
+    this.numGroundImgs = 20;
     this.groundpixelSize = 30;
     this.groundImgWidth = Math.ceil(Math.ceil(getWidth() / this.numGroundImgs/ this.groundpixelSize) * this.groundpixelSize);
     
@@ -72,6 +73,7 @@ Engine.prototype.init = function()
     // game variables
     this.lost = false;
     this.distance = 0;
+    this.score = 0;
     this.char = this.generator.generateCharacter(100);
     this.enemies = new Enemies();
     
@@ -103,11 +105,21 @@ Engine.prototype.init = function()
     window.addEventListener('keydown', function(e) {
         //jump - space
         if (e.keyCode == 32 /*&& self.g != 0*/) {
-            if (!self.char.falling || self.g > 200){
+            if (!self.char.falling || self.g >= 25){
+                if (self.char.falling) 
+                {
+                    if(self.g < 200)
+                        self.g -= 25;
+                    //create particle emiter
+                    var emitter = new particleEmitter(self.context, 'rect', [self.char.x, self.char.y + 50],
+                                                      [0,0], [10,10], "green", [6,6], 20, 10, false);
+                    for(var i = 0; i < 10; i++)
+                        emitter.makeParticle();
+                    
+                    emitter.time = self.lastTime;
+                    self.jumpParticles.push(emitter);
+                }
                 self.char.jump();
-            } else if (self.char.falling && self.g >= 25) {
-                self.char.jump();
-                self.g -= 25;
             }
         }
         //attack - f
@@ -158,6 +170,7 @@ Engine.prototype.animate = function(time) {
     this.timeSinceLastFork += timeSinceLastFrame;
     
     // Update ~~~~~~~~~~~~~~~~~~~
+    this.score += timeSinceLastFrame/10;
     this.distance += (this.speed * timeSinceLastFrame / 1000) / 500; // divide by initial speed as if it were a meter
     //console.log(Math.round(this.distance));
     this.updateWorld();
@@ -302,6 +315,11 @@ Engine.prototype.animate = function(time) {
     if (this.colorPickup) { this.colorPickup.render(context); }
     
     //particle emitter stuff
+    //char jumps
+    for(var i =0 ; i < this.jumpParticles.length; i++)
+    {
+        this.jumpParticles[i].run();
+    }
     //character projectiles
     this.timeSinceLastParticle += timeSinceLastFrame;
     if(this.char.projectiles.length !=0 || this.char.shields.length != 0){
@@ -350,7 +368,7 @@ Engine.prototype.animate = function(time) {
     // UI ~~~~~~~~~~~~~~~~~~~
     this.drawUI(context);
     var fps = Math.round(1000 / timeSinceLastFrame);
-    context.fillText(fps, getWidth() - 100, 100);
+    //context.fillText(fps, getWidth() - 100, 100);
     
     //draw end screen
     if (this.char.hp <= 0) 
@@ -358,7 +376,12 @@ Engine.prototype.animate = function(time) {
         context.fillStyle = "rgba(0, 0, 0, 0.8)";
         context.fillRect(0, 0, getWidth(), getHeight());
         
-        context.font = "50px Arial";
+        context.font = "24px Impact";
+        context.fillStyle = "#EEE";
+        context.textAlign = "center";
+        context.fillText("Score: " + Math.round(this.score), getWidth()*0.5, 100);
+        
+        context.font = "50px Impact";
         context.fillStyle = "#EEE";
         context.textAlign = "center";
         context.fillText("Game Over.", getWidth()*0.5, getHeight()*0.5);
@@ -367,14 +390,13 @@ Engine.prototype.animate = function(time) {
         context.fillStyle = "hsl(" + this.char.hue + ", 90%, 60%)";
         context.fill();
         
-        context.font = "18px Arial";
+        context.font = "18px Impact";
         context.fillStyle= "hsl(" + this.char.hue + ", 90%, 20%)";;
         context.fillText("Play Again", getWidth() *0.5, getHeight()/2 + 80);
         
         this.restartHandler = document.getElementById("canvas").addEventListener('click', function(e) {
             if (e.clientX > getWidth() *0.25 && e.clientX < getWidth() *0.75 && e.clientY > getHeight()/2 + 50 && e.clientY < getWidth()/2 + 100) {
-                self = new Engine("canvas");
-                self.start();
+                window.location = "menu.html";
             }
         });
         return;
@@ -438,6 +460,13 @@ Engine.prototype.translateWorld = function(t) {
         bp.l[i].x += dX;
         bp.l[i].y += dY;
     }
+    
+    //jump emitters
+    for(var i = 0; i < this.jumpParticles.length; i++)
+    {
+        //this.jumpParticles[i].position[0] += dX;
+        //this.jumpParticles[i].position[1] += dY;
+    }
 
     // translate colorPickup
     if (this.colorPickup) {
@@ -452,12 +481,17 @@ Engine.prototype.updateWorld = function() {
     
     // add a fork if necessary
     if (this.cG.lastChunk == "straight" && this.timeSinceLastFork > Math.random() * 5000 + 5000) {
-        this.groundPolys.push(this.cG.generateFork({'x':getWidth(), 'y':getHeight()/2, 'damage':false}));
+        this.groundPolys.push(this.cG.generateFork({'x':getWidth(), 'y':this.getGroundIntersect(getWidth()) - 200 , 'damage':false}));
         this.timeSinceLastFork = 0;
     }
     
     //new way
     var gp;
+    var notplatformGPcount = 0;
+    for(var k = (this.groundPolys.length -1); k >= 0; k--) {
+        if (!this.groundPolys[k].isPlatform)
+            notplatformGPcount ++;
+    }
     for(var i = (this.groundPolys.length -1); i >= 0; i--)
     {
         gp = this.groundPolys[i];
@@ -473,10 +507,11 @@ Engine.prototype.updateWorld = function() {
         }
         
         //remove old
-        if (this.groundPolys.length > 1 && gp.u.length == 1 || gp.l[0].y < 0 || gp.u[1].y > getHeight() * 2) {
+        if (notplatformGPcount > 1 && (gp.u.length == 1 || gp.l[0].y < 0 || gp.u[1].y > getHeight() * 2)) {
             this.groundPolys.splice(i, 1);
+            notplatformGPcount --;
             continue;
-        } else {
+        } else if(gp.u.length > 2) {
             if( gp.u[1].x < 0 )
                 gp.u.splice(0, 1);
             if( gp.l[1].x < 0 )
@@ -539,6 +574,7 @@ Engine.prototype.checkColourCollisions = function() {
                 this.b = Math.min(255, this.b + 85);
                 break;
         }
+        this.score += 1000;
         this.colorPickup = null;
     }
 };
@@ -551,8 +587,8 @@ Engine.prototype.checkFalling = function(t) {
     
     //look for damage
     if (this.getGroundDamage(this.char.x) && dist < 5) {
-        if (this.timeSinceLastDamage > 1000) {
-            //this.char.hp --;
+        if (this.timeSinceLastDamage > 1000 && this.char.shields.length == 0) {
+            this.char.hp --;
             this.timeSinceLastDamage = 0;
         }
     } 
@@ -587,13 +623,17 @@ Engine.prototype.getGroundIntersect = function(x, yThresh)
 {
     if(typeof(yThresh) == 'undefined') yThresh = 0;
     
-    if( x < 0 ) return this.groundPolys[0].u[0].y;
-    while( x > this.groundPolys[0].lastUpper.x)
-    {
-        var newPoly = this.groundPolys[0].extend(this.cG, this.distance, this.speed, this.gravity);
-        if (newPoly) {
-            for (var i=0; i < newPoly.length; i++)
-                this.groundPolys.push(newPoly[i]);
+    for (var i= this.groundPolys.length - 1; i >= 0; i--) {
+    
+        if (this.groundPolys[i].isPlatform) continue;
+        //if( x < 0 ) return this.groundPolys[i].u[i].y;
+        while( x > this.groundPolys[i].lastUpper.x)
+        {
+            var newPoly = this.groundPolys[i].extend(this.cG, this.distance, this.speed, this.gravity);
+            if (newPoly) {
+                for (var j=0; j < newPoly.length; j++)
+                    this.groundPolys.push(newPoly[j]);
+            }
         }
     }
     
@@ -640,13 +680,16 @@ Engine.prototype.getGroundIntersect = function(x, yThresh)
 
 Engine.prototype.getGroundDamage = function(x)
 {
-    if( x < 0 ) return this.groundPolys[0].u[0].y;
-    while( x > this.groundPolys[0].lastUpper.x)
-    {
-        var newPoly = this.groundPolys[0].extend(this.cG, this.distance, this.speed, this.gravity);
-        if (newPoly) {
-            for (var i=0; i < newPoly.length; i++)
-                this.groundPolys.push(newPoly[i]);
+    for (var i= this.groundPolys.length - 1; i >= 0; i--) {
+        if (this.groundPolys[i].isPlatform) continue;
+        //if( x < 0 ) return this.groundPolys[0].u[0].y;
+        while( x > this.groundPolys[i].lastUpper.x)
+        {
+            var newPoly = this.groundPolys[i].extend(this.cG, this.distance, this.speed, this.gravity);
+            if (newPoly) {
+                for (var j=0; j < newPoly.length; j++)
+                    this.groundPolys.push(newPoly[j]);
+            }
         }
     }
     
@@ -683,40 +726,41 @@ Engine.prototype.getGroundDamage = function(x)
 
 Engine.prototype.drawUI = function(context) {
     context.save();
-    context.font = "30px Arial";
-    context.fillStyle = "#000";
+    context.fillStyle = "#fff";
+    
+    context.font = "36px Impact";
     context.textAlign = "left";
-    context.fillText(Math.round(this.distance) + "m", 300, 40);
+    context.fillText(Math.round(this.score), getWidth()/2, 40);
     
     context.beginPath();
-    context.rect(40, 18, 255, 15);
-    context.rect(40, 38, 255, 15);
-    context.rect(40, 58, 255, 15);
-    context.strokeStyle = "#aaa";
+    context.rect(25, 18, 255, 15);
+    context.rect(25, 38, 255, 15);
+    context.rect(25, 58, 255, 15);
+    context.strokeStyle = "#fff";
     context.lineWidth = 1;
     context.stroke();
     
-    context.font = "14px Arial";
+    context.font = "14px Impact";
     context.fillStyle = "red";
     context.textAlign = "right";
-    context.fillText(Math.round(this.r), 30, 30);
+    //context.fillText(Math.round(this.r), 30, 30);
     
-    context.fillRect(40, 18, Math.round(this.r), 15);
+    context.fillRect(25, 18, Math.round(this.r), 15);
     
     context.fillStyle = "green";
-    context.fillText(Math.round(this.g), 30, 50);
-    context.fillRect(40, 38, Math.round(this.g), 15);
+    //context.fillText(Math.round(this.g), 30, 50);
+    context.fillRect(25, 38, Math.round(this.g), 15);
     
     context.fillStyle = "blue";
-    context.fillText(Math.round(this.b), 30, 70);
-    context.fillRect(40, 58, Math.round(this.b), 15);
+    //context.fillText(Math.round(this.b), 30, 70);
+    context.fillRect(25, 58, Math.round(this.b), 15);
     
     context.setLineDash([5]);
     context.strokeStyle = "#555";
     context.lineWidth = 3;
     context.beginPath();
-    context.moveTo(240, 10);
-    context.lineTo(240, 110);
+    context.moveTo(225, 10);
+    context.lineTo(225, 90);
     context.stroke();
     context.setLineDash([0]);
     context.restore();
@@ -724,6 +768,10 @@ Engine.prototype.drawUI = function(context) {
     for (var i=0; i < this.char.hp; i++) {
         context.drawImage(this.imgHeart, getWidth() - ( 55 * (i + 1)), 0);
     }
+    context.font = "18px Impact";
+    context.fillStyle = "#fff";
+    context.textAlign = "right";
+    context.fillText("Distance: " + Math.round(this.distance) + "m", getWidth() - 10, 70);
 };
 
 Engine.prototype.drawHeart = function() {

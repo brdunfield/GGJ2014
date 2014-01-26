@@ -41,7 +41,7 @@ var Character = function(w, h, hue) {
 Character.prototype.jump = function() {
     var d = new Date();
     this.falling = true;
-    this.jumpV = 30;
+    this.jumpV = 25;
 };
 
 Character.prototype.attack = function(context) {
@@ -70,13 +70,14 @@ Character.prototype.update = function(totalMS, generator, enemies, context)
             if(enemies.checkProjectile(this.projectiles[i].position[0], this.projectiles[i].position[1]))
             {
                 this.projectiles.splice(i, 1);
+                //score += 1000000;
             }
         }
         //check my collision
         if( enemies.checkProjectile(this.x + this.w * 0.5, this.y))
         {
-            //if(this.shields.length == 0)
-                //this.hp--;
+            if(this.shields.length == 0)
+                this.hp--;
         }
     }
 }
