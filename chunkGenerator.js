@@ -6,16 +6,17 @@ var chunkGenerator = function(){
 chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, speed, gravity) {
     // TODO - algorithm to make this based on difficulty
     
+    
     // leave vStart as a power of 2 to save computation
-    var vStart = Math.pow(speed, 2) + Math.pow(20, 2), // 20 is jumpV
-        theta = Math.asin(20/speed);
+    var vStart = Math.pow(speed, 2) + Math.pow(30, 2), // 20 is jumpV
+        theta = Math.asin(30/speed);
     var maxJumpRange = vStart * 2 * Math.sin(theta) * Math.cos(theta) / gravity;
     console.log(maxJumpRange);
     var RNG = Math.random();
     if (RNG < 0.20 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
     else if (RNG < 0.4 && this.lastChunk != "spikes" && dist > /*50*/ 5) return this.generateSpikes(lastPoint, maxJumpRange);
     else if (RNG < 0.60 && this.lastChunk != "cliff") return this.generateCliff(lastPoint);
-    else if (RNG < 0.80) return this.generateU(lastPoint, maxJumpRange, gravity/speed);
+    else if (RNG < 0.80 && this.lastChunk != "u") return this.generateU(lastPoint, maxJumpRange, gravity/speed);
     else return this.generateStraight(lastPoint);
 };
 
@@ -205,5 +206,6 @@ chunkGenerator.prototype.generateU = function(startPoint, maxJumpRange, maxSlope
                  'y': startPoint.y -50,
                  'damage': false}
     result.platform = new GroundPoly(true, platformStart, 300);
+    this.lastChunk="u";
     return result;
 };
