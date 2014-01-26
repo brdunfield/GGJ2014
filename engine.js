@@ -11,7 +11,7 @@ var Engine = function(canvasID) {
     //draw loading screen//
     this.context.fillStyle = "rgba(0, 0, 0, 0.8)";
     this.context.fillRect(0, 0, getWidth(), getHeight());
-    this.context.font = "50px Arial";
+    this.context.font = "50px Impact";
     this.context.fillStyle = "#EEE";
     this.context.textAlign = "center";
     this.context.fillText("Loading...", getWidth()*0.5, getHeight()*0.5);
@@ -35,7 +35,7 @@ Engine.prototype.init = function()
     this.numScrollsBackground = 0;
     this.imgToBlendForeground = 0;
     this.imgToBlendBackground = 0;
-    this.numGroundImgs = 10;
+    this.numGroundImgs = 20;
     this.groundpixelSize = 30;
     this.groundImgWidth = Math.ceil(Math.ceil(getWidth() / this.numGroundImgs/ this.groundpixelSize) * this.groundpixelSize);
     
@@ -72,6 +72,7 @@ Engine.prototype.init = function()
     // game variables
     this.lost = false;
     this.distance = 0;
+    this.score = 0;
     this.char = this.generator.generateCharacter(100);
     this.enemies = new Enemies();
     
@@ -150,6 +151,7 @@ Engine.prototype.animate = function(time) {
     this.timeSinceLastFork += timeSinceLastFrame;
     
     // Update ~~~~~~~~~~~~~~~~~~~
+    this.score += timeSinceLastFrame/10;
     this.distance += (this.speed * timeSinceLastFrame / 1000) / 500; // divide by initial speed as if it were a meter
     //console.log(Math.round(this.distance));
     this.updateWorld();
@@ -207,7 +209,7 @@ Engine.prototype.animate = function(time) {
     }
     
     //update character and enemies
-    this.char.update(time, this.generator, this.enemies);
+    this.char.update(time, this.generator, this.enemies, this.score);
     this.enemies.update(time, this.generator);
     
     // Draw ~~~~~~~~~~~~~~~~~~~~~~~
@@ -330,7 +332,7 @@ Engine.prototype.animate = function(time) {
     // UI ~~~~~~~~~~~~~~~~~~~
     this.drawUI(context);
     var fps = Math.round(1000 / timeSinceLastFrame);
-    context.fillText(fps, getWidth() - 100, 100);
+    //context.fillText(fps, getWidth() - 100, 100);
     
     //draw end screen
     if (this.char.hp <= 0) 
@@ -338,7 +340,12 @@ Engine.prototype.animate = function(time) {
         context.fillStyle = "rgba(0, 0, 0, 0.8)";
         context.fillRect(0, 0, getWidth(), getHeight());
         
-        context.font = "50px Arial";
+        context.font = "24px Impact";
+        context.fillStyle = "#EEE";
+        context.textAlign = "center";
+        context.fillText("Score: " + Math.round(this.score), getWidth()*0.5, 100);
+        
+        context.font = "50px Impact";
         context.fillStyle = "#EEE";
         context.textAlign = "center";
         context.fillText("Game Over.", getWidth()*0.5, getHeight()*0.5);
@@ -347,7 +354,7 @@ Engine.prototype.animate = function(time) {
         context.fillStyle = "hsl(" + this.char.hue + ", 90%, 60%)";
         context.fill();
         
-        context.font = "18px Arial";
+        context.font = "18px Impact";
         context.fillStyle= "hsl(" + this.char.hue + ", 90%, 20%)";;
         context.fillText("Play Again", getWidth() *0.5, getHeight()/2 + 80);
         
@@ -519,6 +526,7 @@ Engine.prototype.checkColourCollisions = function() {
                 this.b = Math.min(255, this.b + 85);
                 break;
         }
+        this.score += 1000;
         this.colorPickup = null;
     }
 };
@@ -532,7 +540,7 @@ Engine.prototype.checkFalling = function(t) {
     //look for damage
     if (this.getGroundDamage(this.char.x) && dist < 5) {
         if (this.timeSinceLastDamage > 1000) {
-            //this.char.hp --;
+            this.char.hp --;
             this.timeSinceLastDamage = 0;
         }
     } 
@@ -663,40 +671,41 @@ Engine.prototype.getGroundDamage = function(x)
 
 Engine.prototype.drawUI = function(context) {
     context.save();
-    context.font = "30px Arial";
-    context.fillStyle = "#000";
+    context.fillStyle = "#fff";
+    
+    context.font = "36px Impact";
     context.textAlign = "left";
-    context.fillText(Math.round(this.distance) + "m", 300, 40);
+    context.fillText(Math.round(this.score), getWidth()/2, 40);
     
     context.beginPath();
     context.rect(40, 18, 255, 15);
     context.rect(40, 38, 255, 15);
     context.rect(40, 58, 255, 15);
-    context.strokeStyle = "#aaa";
+    context.strokeStyle = "#fff";
     context.lineWidth = 1;
     context.stroke();
     
-    context.font = "14px Arial";
+    context.font = "14px Impact";
     context.fillStyle = "red";
     context.textAlign = "right";
-    context.fillText(Math.round(this.r), 30, 30);
+    //context.fillText(Math.round(this.r), 30, 30);
     
-    context.fillRect(40, 18, Math.round(this.r), 15);
+    context.fillRect(25, 18, Math.round(this.r), 15);
     
     context.fillStyle = "green";
-    context.fillText(Math.round(this.g), 30, 50);
-    context.fillRect(40, 38, Math.round(this.g), 15);
+    //context.fillText(Math.round(this.g), 30, 50);
+    context.fillRect(25, 38, Math.round(this.g), 15);
     
     context.fillStyle = "blue";
-    context.fillText(Math.round(this.b), 30, 70);
-    context.fillRect(40, 58, Math.round(this.b), 15);
+    //context.fillText(Math.round(this.b), 30, 70);
+    context.fillRect(25, 58, Math.round(this.b), 15);
     
     context.setLineDash([5]);
     context.strokeStyle = "#555";
     context.lineWidth = 3;
     context.beginPath();
-    context.moveTo(240, 10);
-    context.lineTo(240, 110);
+    context.moveTo(225, 10);
+    context.lineTo(225, 90);
     context.stroke();
     context.setLineDash([0]);
     context.restore();
@@ -704,6 +713,10 @@ Engine.prototype.drawUI = function(context) {
     for (var i=0; i < this.char.hp; i++) {
         context.drawImage(this.imgHeart, getWidth() - ( 55 * (i + 1)), 0);
     }
+    context.font = "18px Impact";
+    context.fillStyle = "#fff";
+    context.textAlign = "right";
+    context.fillText("Distance: " + Math.round(this.distance) + "m", getWidth() - 10, 70);
 };
 
 Engine.prototype.drawHeart = function() {
