@@ -209,7 +209,7 @@ Engine.prototype.animate = function(time) {
         context.beginPath();
     
         //new
-        var gp
+        var gp;
         for(var i = 0; i < this.groundPolys.length; i++)
         {
             gp = this.groundPolys[i];
@@ -387,16 +387,23 @@ Engine.prototype.updateWorld = function() {
         gp = this.groundPolys[i];
         
         //add new
-        while( gp.lastUpper.x < getWidth() )
+        while( !gp.isClosed && gp.lastUpper.x < getWidth() )
         {
-            gp.extend();
+            var newPoly = gp.extend(this.cG, this.distance, this.speed, this.gravity);
+            if (newPoly) {
+                this.groundPolys.push(newPoly);
+            }
         }
         
         //remove old
-        if( gp.u[1].x < 0 )
-            gp.u.splice(0, 1);
-        if( gp.l[1].x < 0 )
-            gp.l.splice(0, 1);
+        if (gp.u.length == 1) {
+            delete gp;
+        } else {
+            if( gp.u[1].x < 0 )
+                gp.u.splice(0, 1);
+            if( gp.l[1].x < 0 )
+                gp.l.splice(0, 1);
+        }
         
     }
 
@@ -405,13 +412,20 @@ Engine.prototype.updateWorld = function() {
     //add new
     while( bp.lastUpper.x < getWidth() )
     {
-        bp.extend();
+        var newPoly = bp.extend(this.cG, this.distance, this.speed, this.gravity);
+        if (newPoly) {
+            this.groundPolys.push(newPoly);
+        }
     }
     //remove old
-    if( bp.u[1].x < 0 )
-        bp.u.splice(0, 1);
-    if( bp.l[1].x < 0 )
-        bp.l.splice(0, 1);
+    if (bp.u.length == 0) {
+        delete bp;
+    }else {
+        if( bp.u[1].x < 0 )
+            bp.u.splice(0, 1);
+        if( bp.l[1].x < 0 )
+            bp.l.splice(0, 1);
+    }
     
     // generate a colour Pickup maybe
     if (!this.colorPickup && Math.random()*10000 + 4000 < this.timeSinceLastColor) {
@@ -482,7 +496,7 @@ Engine.prototype.checkFalling = function(t) {
     if (rightPt.damage && leftPt.damage && distFromLine < 5) {
         //this.falling = null;
         if (this.timeSinceLastDamage > 1000) {
-            this.char.hp --;
+            //this.char.hp --;
             this.timeSinceLastDamage = 0;
         }
     } 
@@ -508,7 +522,10 @@ Engine.prototype.getGroundIntersect = function(x)
     if( x < 0 ) return this.groundPolys[0].u[0].y;
     while( x > this.groundPolys[0].lastUpper.x)
     {
-        this.groundPolys[0].extend();
+        var newPoly = this.groundPolys[0].extend(this.cG, this.distance, this.speed, this.gravity);
+        if (newPoly) {
+            this.groundPolys.push(newPoly);
+        }
     }
     
     //find points around x value

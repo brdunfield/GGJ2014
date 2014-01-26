@@ -69,8 +69,8 @@ Character.prototype.update = function(totalMS, generator, enemies)
             }
         }
         //check my collision
-        if(enemies.checkProjectile(this.x + this.w * 0.5, this.y))
-            this.hp--;
+        if(enemies.checkProjectile(this.x + this.w * 0.5, this.y))  
+            ;//this.hp--;
     }
 }
 
