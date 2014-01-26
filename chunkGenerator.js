@@ -11,7 +11,7 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     var vStart = Math.pow(speed, 2) + Math.pow(30, 2), // 20 is jumpV
         theta = Math.asin(30/speed);
     var maxJumpRange = vStart * 2 * Math.sin(theta) * Math.cos(theta) / gravity;
-    console.log(maxJumpRange);
+    //console.log(maxJumpRange);
     var RNG = Math.random();
     if (RNG < 0.20 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
     else if (RNG < 0.4 && this.lastChunk != "spikes" && dist > /*50*/ 5) return this.generateSpikes(lastPoint, maxJumpRange);
@@ -21,7 +21,7 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
 };
 
 chunkGenerator.prototype.generateFork = function(startPoint) {
-    console.log("Generating Fork");
+    //console.log("Generating Fork");
     var result = new GroundPoly(false, startPoint, null);
 
     
@@ -61,7 +61,7 @@ chunkGenerator.prototype.generateFork = function(startPoint) {
 
 //make mountain from last point
 chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
-    console.log("Generating Mountain");
+    //console.log("Generating Mountain");
     var result = {};
     result.upper = [];
     result.lower =[];
@@ -84,18 +84,18 @@ chunkGenerator.prototype.generateMountain = function(startPoint, maxSlope){
 //make spikes
 chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
     var result = {};
-    console.log("Generating Spikes");
+    //console.log("Generating Spikes");
     result.upper = [];
     result.lower = [];
     result.upper.push(startPoint);
     result.platform = null;
     var numSpikes = Math.round(Math.random() * ((maxJumpRange / 15)*2)) + 20;
-    console.log("Max jump range: " + maxJumpRange + ", spike distance generated: " + numSpikes*15);
+    //console.log("Max jump range: " + maxJumpRange + ", spike distance generated: " + numSpikes*15);
     
     
     if (numSpikes > maxJumpRange/15) {
         // generate a platform
-        console.log("Platform");
+        //console.log("Platform");
         var startPoint = {'x': Math.random() * maxJumpRange - 25 + startPoint.x,
                           'y': startPoint.y - 200,
                           'damage': false};
@@ -132,7 +132,7 @@ chunkGenerator.prototype.generateSpike = function(startPoint) {
 }
 
 chunkGenerator.prototype.generateCliff = function(startPoint){
-    console.log("Generating Cliff");
+    //console.log("Generating Cliff");
     var result = {};
     result.upper = [];
     result.lower = [];
@@ -153,7 +153,7 @@ chunkGenerator.prototype.generateCliff = function(startPoint){
 };
 
 chunkGenerator.prototype.generateStraight = function(startPoint){
-    console.log("Generating Straight");
+    //console.log("Generating Straight");
     var result = {};
     result.upper = [];
     result.lower = [];
@@ -186,7 +186,7 @@ chunkGenerator.prototype.generateStraight = function(startPoint){
 };
 
 chunkGenerator.prototype.generateU = function(startPoint, maxJumpRange, maxSlope, spikes) {
-    console.log("Generating U");
+    //console.log("Generating U");
     var result = {};
     result.upper = [];
     result.lower = [];

@@ -53,7 +53,7 @@ function loadNext(){
         
         //PASS gameName and charName to the game
         //------------------------
-        window.location = "index.html";
+        window.location = "index.html?game=" + gameName.replace(" ", "") + "&char=" + charName.replace(" ", "");
     }
 }
 
