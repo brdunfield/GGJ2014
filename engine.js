@@ -68,6 +68,7 @@ Engine.prototype.init = function()
     this.timeSinceLastColor = 0;
     this.timeSinceLastParticle = 0;
     this.timeSinceLastDamage = 0;
+    this.timeSinceLastFork = 0;
     this.colorPickup = null;
     
     //new lines
@@ -127,6 +128,7 @@ Engine.prototype.animate = function(time) {
     this.timeSinceLastColor += timeSinceLastFrame;
     this.timeSinceLastEnemy += timeSinceLastFrame;
     this.timeSinceLastDamage += timeSinceLastFrame;
+    this.timeSinceLastFork += timeSinceLastFrame;
     
     // Update ~~~~~~~~~~~~~~~~~~~
     this.distance += (this.speed * timeSinceLastFrame / 1000) / 500; // divide by initial speed as if it were a meter
@@ -398,6 +400,12 @@ Engine.prototype.translateWorld = function(t) {
 
 Engine.prototype.updateWorld = function() {
     
+    // add a fork if necessary
+    if (this.cG.lastChunk == "straight" && this.timeSinceLastFork > Math.random() * 5000 + 5000) {
+        this.groundPolys.push(this.cG.generateFork({'x':getWidth(), 'y':getHeight()/2, 'damage':false}));
+        this.timeSinceLastFork = 0;
+    }
+    
     //new way
     var gp;
     for(var i = (this.groundPolys.length -1); i >= 0; i--)
@@ -415,7 +423,7 @@ Engine.prototype.updateWorld = function() {
         }
         
         //remove old
-        if (gp.u.length == 1) {
+        if (gp.u.length == 1 || gp.l[0].y < 0 || gp.u[1].y > getHeight() * 2) {
             this.groundPolys.splice(i, 1);
             continue;
         } else {
@@ -574,8 +582,8 @@ Engine.prototype.getGroundIntersect = function(x, yThresh)
             }
         }
     }
-    console.clear();
-    console.log(current);
+    //console.clear();
+    //console.log(current);
     return current || getWidth() * 0.5;
 
 }
