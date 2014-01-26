@@ -20,44 +20,43 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     else return this.generateStraight(lastPoint);
 };
 
-chunkGenerator.prototype.generatePlatform = function(startPoint, width) {
-    
-};
-
 chunkGenerator.prototype.generateFork = function(startPoint) {
     console.log("Generating Fork");
-    var line = {}
-    line.points = [];
-    var d = new Date();
-    line.id = d.getTime();
-    line.master = false;
-    line.platform = false;
+    var result = new GroundPoly(false, startPoint, null);
+
     
-    line.points.push({'x': startPoint.x, 
-                 'y': startPoint.y - 150,
+    result.upper.push({'x': startPoint.x, 
+                 'y': startPoint.y - 200,
                  'damage': false });
-    line.points.push({'x': startPoint.x + 500, 
-                 'y': startPoint.y - 150,
+    result.upper.push({'x': startPoint.x + 500, 
+                 'y': startPoint.y - 350,
                  'damage': false });
-    line.points.push({'x': startPoint.x + 500, 
-                 'y': startPoint.y - 300,
+    result.upper.push({'x': startPoint.x + 1000, 
+                 'y': startPoint.y - 350,
                  'damage': false });
-    line.points.push({'x': startPoint.x + 1000, 
-                 'y': startPoint.y - 300,
+    result.upper.push({'x': startPoint.x + 1500, 
+                 'y': startPoint.y - 500,
                  'damage': false });
-    line.points.push({'x': startPoint.x + 1000, 
-                 'y': startPoint.y - 450,
+    result.upper.push({'x': startPoint.x + 2000, 
+                 'y': startPoint.y - 700,
                  'damage': false });
-    line.points.push({'x': startPoint.x + 1500, 
-                 'y': startPoint.y - 450,
+    
+    result.lower.push({'x': startPoint.x, 
+                 'y': startPoint.y - 180,
                  'damage': false });
-    line.points.push({'x': startPoint.x + 1500, 
+    result.lower.push({'x': startPoint.x + 500, 
+                 'y': startPoint.y - 180,
+                 'damage': false });
+    result.lower.push({'x': startPoint.x + 1000, 
+                 'y': startPoint.y - 200,
+                 'damage': false });
+    result.lower.push({'x': startPoint.x + 2000, 
                  'y': startPoint.y - 600,
                  'damage': false });
-    line.points.push({'x': startPoint.x + 2000, 
-                 'y': startPoint.y - 600,
-                 'damage': false });
-    return line;
+    
+    result.lastUpper = result.upper[result.upper.length -1];
+    result.lastLower = result.lower[result.lower.length -1];
+    return result;
 };
 
 //make mountain from last point
