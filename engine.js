@@ -38,6 +38,9 @@ Engine.prototype.init = function()
     this.imgBackground = this.generator.generateBackground(canvas.width, canvas.height, 10, 0, 0.05, 175, 250);
     this.imgBackgroundNext = this.generator.generateBackground(canvas.width, canvas.height, 10, 1, 0.05, 175, 250);
     this.imgSky = this.generator.generateBackground(canvas.width, canvas.height, 1, 1, 0.005, 200, 255);
+    //heart image
+    this.imgHeart = document.createElement('canvas');
+    this.imgHeart.width = this.imgHeart.height = 45;
     
     // time
     this.startTime = 0;
@@ -55,6 +58,8 @@ Engine.prototype.init = function()
     
     this.timeSinceLastEnemy = 0;
     
+    this.drawHeart(this.imgHeart);
+    
     this.colourDecay = [2, 2, 2]; // per second
     this.r = Math.random() * 100 + 50;
     this.g = Math.random() * 100 + 50;
@@ -70,11 +75,7 @@ Engine.prototype.init = function()
     this.groundPolys.push( new GroundPoly( false ) );
     this.backPoly = new GroundPoly( false );
     
-    //this.platformCoords = [];
-    this.cG = new chunkGenerator();
-    
-    // Handlers
-    
+    // Handlers //
     // Jump handler
     window.addEventListener('keydown', function(e) {
         if (e.keyCode == 32) {
@@ -581,26 +582,28 @@ Engine.prototype.drawUI = function(context) {
     context.setLineDash([0]);
     
     for (var i=0; i < this.char.hp; i++) {
-        this.drawHeart(context, [getWidth() - 25 - (45*i), 20]);
+        context.drawImage(this.imgHeart, getWidth() - ( 55 * (i + 1)), 0);
     }
 };
 
-Engine.prototype.drawHeart = function(context, startPoint) {
-    context.save();
-        context.translate(startPoint[0], startPoint[1]);
-        context.moveTo(0, 0);
-        context.beginPath();
-        context.lineTo(10, -10);
-        context.lineTo(20, 0);
-        context.lineTo(0, 20);
-        context.lineTo(-20, 0);
-        context.lineTo(-10, -10);
-        context.lineTo(0, 0);
-        context.closePath();
-        context.fillStyle = "red";
-        context.fill();
-        context.stroke();
-    context.restore();
+Engine.prototype.drawHeart = function() {
+    var ctxHeart = this.imgHeart.getContext('2d');
+    
+    ctxHeart.translate(this.imgHeart.width * 0.5, this.imgHeart.height * 0.5);
+    ctxHeart.moveTo(0, 0);
+    ctxHeart.beginPath();
+    ctxHeart.lineTo(10, -10);
+    ctxHeart.lineTo(20, 0);
+    ctxHeart.lineTo(0, 20);
+    ctxHeart.lineTo(-20, 0);
+    ctxHeart.lineTo(-10, -10);
+    ctxHeart.lineTo(0, 0);
+    ctxHeart.closePath();
+    ctxHeart.fillStyle = "hsl(" + this.char.hue + ", 90%, 60%)";
+    ctxHeart.strokeStyle = "hsl(" + this.char.hue + ", 90%, 30%)";
+    ctxHeart.lineWidth = 2;
+    ctxHeart.fill();
+    ctxHeart.stroke();
 }
 
 /* ~~ Helper Functions ~~ */
