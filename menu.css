@@ -15,7 +15,14 @@ h2{
     color:white;
     font-size:1em;
 }
-
+h3{
+    color:white;
+    font-size:1em;
+}
+#textbox{
+    display:block;
+    margin:auto;
+}
 footer{
     position:absolute;
     bottom:0;
@@ -31,4 +38,16 @@ footer{
     right:0;
     
     height:400px;
+}
+
+#tutorial{
+    position:absolute;
+    bottom:50px;
+    width:100%;
+    height:200px;
+}
+#box{
+    float:right;
+    width:33%;
+    height:100%;
 }

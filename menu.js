@@ -4,8 +4,12 @@ var gameName,
 window.onload = function(){
     animate();
     
-    window.addEventListener('keyup',function(){
-        switchEntry();
+    window.addEventListener('keyup',function(e){
+        if (e.keyCode == 13) {
+            loadNext();
+        }
+        else
+            switchEntry();
     });
     
     //get display default game name
@@ -41,15 +45,14 @@ function animate(){
 }
 
 function loadNext(){
-    var field = document.getElementById("textbox");
-    if(field.classList.contains("title")){
-        gameName = document.forms["textbox"]["entry"].value;
-        document.forms["textbox"]["entry"].value = "Now our hero needs a name";
-        $(field).removeClass("title");
-        $(field).addClass("name");
+    if($("#textbox").hasClass("title")){
+        gameName = $("#textbox").val();
+        $("#textbox").val("Now our hero needs a name");
+        $("#textbox").removeClass("title");
+        $("#textbox").addClass("name");
         switchEntry();
-    }else if(field.classList.contains("name")){
-        charName = document.forms["textbox"]["entry"].value;
+    }else if($("#textbox").hasClass("name")){
+        charName = $("#textbox").val();
         
         //PASS gameName and charName to the game
         //------------------------
@@ -58,7 +61,6 @@ function loadNext(){
 }
 
 function switchEntry(){
-    var title = document.forms["textbox"]["entry"].value;
     $("#title").empty();
-    $("#title").append(title);
+    $("#title").append($("#textbox").val());
 }
