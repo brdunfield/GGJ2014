@@ -44,11 +44,15 @@ Character.prototype.jump = function() {
 };
 
 Character.prototype.attack = function(context) {
-    this.projectiles.push(new particleEmitter(context, "rect",[this.x,this.y], [25,0], [5,5], this.hue, [4,4], 20, 5));
+    if(this.projectiles.length < 5){
+        this.projectiles.push(new particleEmitter(context, "rect",[this.x,this.y], [25,0], [5,5], this.hue, [4,4], 20, 5));
+    }
 };
 
 Character.prototype.defend = function(context){
-    this.shields.push(new particleEmitter(context, "ellipse", [this.x,this.y], [0,0], [5,5], this.hue, [80,80], 20, 5));
+    if(this.shields.length < 5){
+        this.shields.push(new particleEmitter(context, "ellipse", [this.x,this.y], [0,0], [5,5], this.hue, [80,80], 20, 5));
+    }
 };
 
 Character.prototype.update = function(totalMS, generator, enemies)
