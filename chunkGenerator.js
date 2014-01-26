@@ -8,8 +8,8 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     var difficulty = 1;
     
     // leave vStart as a power of 2 to save computation
-    var vStart = Math.pow(speed, 2) + Math.pow(30, 2), // 20 is jumpV
-        theta = Math.asin(30/speed);
+    var vStart = Math.pow(speed, 2) + Math.pow(25, 2), // 25 is jumpV
+        theta = Math.asin(25/speed);
     var maxJumpRange = vStart * 2 * Math.sin(theta) * Math.cos(theta) / gravity;
     //console.log(maxJumpRange);
     var RNG = Math.random();
