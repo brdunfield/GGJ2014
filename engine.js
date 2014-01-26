@@ -280,7 +280,7 @@ Engine.prototype.updateWorld = function() {
         for (var i=0; i < newChunk.master.length; i++)
             master.points.push(newChunk.master[i]);
         if (newChunk.platform)
-            this.world.push(newChunk[i].platform);
+            this.world.push(newChunk.platform);
     }
     
     // Add a fork maybe

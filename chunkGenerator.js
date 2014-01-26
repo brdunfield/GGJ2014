@@ -7,10 +7,10 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     // TODO - algorithm to make this based on difficulty
     
     // leave vStart as a power of 2 to save computation
-    var vStart = Math.pow(speed, 2) + Math.pow(50, 2),
-        theta = Math.asin(50/speed);
-    var maxJumpRange = vStart * Math.sin(2*theta) / gravity;
-    //console.log(maxJumpRange);
+    var vStart = Math.pow(speed, 2) + Math.pow(20, 2), // 20 is jumpV
+        theta = Math.asin(20/speed);
+    var maxJumpRange = vStart * 2 * Math.sin(theta) * Math.cos(theta) / gravity;
+    console.log(maxJumpRange);
     var RNG = Math.random();
     if (RNG < 0.25 && this.lastChunk != "mountain") return this.generateMountain(lastPoint, gravity/speed);
     else if (RNG < 0.5 && this.lastChunk != "spikes" && dist > /*50*/ 5) return this.generateSpikes(lastPoint, maxJumpRange);
@@ -18,14 +18,13 @@ chunkGenerator.prototype.generateChunk = function(lastPoint, r, g, b, dist, spee
     else return this.generateStraight(lastPoint);
 };
 
-chunkGenerator.prototype.generatePlatform = function(startPoint) {
+chunkGenerator.prototype.generatePlatform = function(startPoint, width) {
     var points = [];
-    var width = Math.random() * 300 + 100;
     points.push({'x': startPoint.x, 
                  'y': startPoint.y,
                  'damage': false });
     points.push({'x': startPoint.x, 
-                 'y': startPoint.y - 50,
+                 'y': startPoint.y - 50, 
                  'damage': false });
     points.push({'x': startPoint.x + width, 
                  'y': startPoint.y - 50,
@@ -101,7 +100,22 @@ chunkGenerator.prototype.generateSpikes = function(startPoint, maxJumpRange){
     console.log("Generating Spikes");
     result.master = []
     result.master.push(startPoint);
-    var numSpikes = Math.round(Math.random() * ((maxJumpRange / 15) - 6)) + 5;
+    var numSpikes = Math.round(Math.random() * ((maxJumpRange / 15)*2)) + 20;
+    console.log("Max jump range: " + maxJumpRange + ", spike distance generated: " + numSpikes*15);
+    
+    if (numSpikes > maxJumpRange/15) {
+        // generate a platform
+        var startPoint = {'x': Math.random()*maxJumpRange/15 + startPoint.x,
+                          'y': startPoint.y - 150,
+                          'damage': false};
+        result.platform = {};
+        result.platform.platform =true;
+        result.platform.master = false;
+        var d = new Date();
+        result.platform.id = d.getTime();
+        result.platform.points = this.generatePlatform(startPoint, numSpikes/2*15);
+    }
+    
     for (var i = 0; i < numSpikes; i++) {
         var spike = this.generateSpike(result.master[result.master.length-1]);
         for (var j=0; j < spike.length; j++) {
