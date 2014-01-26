@@ -110,8 +110,8 @@ Generator.prototype.generateCharacter = function(size, enemy, hue)
     ctxMain.fillStyle = 'black';
     ctxMain.beginPath();
     
-    ctxMain.arc(pos1X - this.getSeedVal(rad1 * 0.25, rad1 * 0.75), 
-                pos1Y - this.getSeedVal(rad1 * 0.25, rad1 * 0.75), 
+    ctxMain.arc(pos1X + this.getSeedVal(-rad1 * 0.25, rad1 * 0.75), 
+                pos1Y + this.getSeedVal(-rad1 * 0.25, rad1 * 0.75), 
                 this.getSeedVal(rad1 * 0.125, rad1 * 0.25), 
                 0, 
                 Math.twoPI, 

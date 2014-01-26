@@ -26,32 +26,32 @@ chunkGenerator.prototype.generateFork = function(startPoint) {
 
     
     result.upper.push({'x': startPoint.x, 
-                 'y': startPoint.y - 200,
-                 'damage': false });
-    result.upper.push({'x': startPoint.x + 500, 
-                 'y': startPoint.y - 350,
+                 'y': startPoint.y - 400,
                  'damage': false });
     result.upper.push({'x': startPoint.x + 1000, 
-                 'y': startPoint.y - 350,
-                 'damage': false });
-    result.upper.push({'x': startPoint.x + 1500, 
-                 'y': startPoint.y - 500,
+                 'y': startPoint.y - 700,
                  'damage': false });
     result.upper.push({'x': startPoint.x + 2000, 
                  'y': startPoint.y - 700,
                  'damage': false });
+    result.upper.push({'x': startPoint.x + 3000, 
+                 'y': startPoint.y - 1000,
+                 'damage': false });
+    result.upper.push({'x': startPoint.x + 4000, 
+                 'y': startPoint.y - 1400,
+                 'damage': false });
     
     result.lower.push({'x': startPoint.x, 
-                 'y': startPoint.y - 180,
-                 'damage': false });
-    result.lower.push({'x': startPoint.x + 500, 
-                 'y': startPoint.y - 180,
+                 'y': startPoint.y - 360,
                  'damage': false });
     result.lower.push({'x': startPoint.x + 1000, 
-                 'y': startPoint.y - 200,
+                 'y': startPoint.y - 360,
                  'damage': false });
     result.lower.push({'x': startPoint.x + 2000, 
-                 'y': startPoint.y - 600,
+                 'y': startPoint.y - 400,
+                 'damage': false });
+    result.lower.push({'x': startPoint.x + 4000, 
+                 'y': startPoint.y - 1200,
                  'damage': false });
     
     result.lastUpper = result.upper[result.upper.length -1];
