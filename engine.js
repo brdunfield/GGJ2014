@@ -34,21 +34,23 @@ Engine.prototype.init = function()
     this.numScrollsForeground = 0;
     this.numScrollsBackground = 0;
     this.numGroundImgs = 10;
+    this.groundpixelSize = 30;
+    this.groundImgWidth = Math.ceil(Math.ceil(getWidth() / this.numGroundImgs/ this.groundpixelSize) * this.groundpixelSize);
     
     this.imgsForeground = [];
     this.imgsBackground = [];
-    for(var i = 0; i < this.numGroundImgs; i++)
+    for(var i = 0; i < this.numGroundImgs + 1; i++)
     {
         this.imgsForeground.push(this.generator.generateBackground(
-                                                    canvas.width / (this.numGroundImgs-1),
+                                                    this.groundImgWidth,
                                                     canvas.height, 
-                                                    30, 
+                                                    this.groundpixelSize, 
                                                     this.numScrollsForeground++, 
                                                     0.05, 50, 150));
         this.imgsBackground.push(this.generator.generateBackground(
-                                                    canvas.width / (this.numGroundImgs-1), 
+                                                    this.groundImgWidth, 
                                                     canvas.height, 
-                                                    10, 
+                                                    Math.round(this.groundpixelSize * 0.33), 
                                                     this.numScrollsBackground++, 
                                                     0.05, 175, 250));
     }
@@ -177,24 +179,24 @@ Engine.prototype.animate = function(time) {
     }
     //image positions
     this.offsetForeground -= this.speed * timeSinceLastFrame * 0.001;
-    if(this.offsetForeground <= -getWidth() / this.numGroundImgs)
+    if(this.offsetForeground <= -this.groundImgWidth)
     {
         this.offsetForeground = 0;
         this.imgsForeground.splice(0, 1);
-        this.imgsForeground.push(this.generator.generateBackground(getWidth() / this.numGroundImgs, 
+        this.imgsForeground.push(this.generator.generateBackground(this.groundImgWidth, 
                                                                    getHeight(), 
-                                                                   30, 
+                                                                   this.groundpixelSize, 
                                                                    this.numScrollsForeground++, 
                                                                    0.05, 50, 150));
     }
     this.offsetBackground -= this.speed * timeSinceLastFrame * 0.001 * 0.3;
-    if(this.offsetBackground <= -getWidth() / this.numGroundImgs)
+    if(this.offsetBackground <= -this.groundImgWidth)
     {
         this.offsetBackground = 0;
         this.imgsBackground.splice(0, 1);
-        this.imgsBackground.push(this.generator.generateBackground(getWidth() / this.numGroundImgs, 
+        this.imgsBackground.push(this.generator.generateBackground(this.groundImgWidth, 
                                                                    getHeight(), 
-                                                                   10, 
+                                                                   Math.round(this.groundpixelSize * 0.33), 
                                                                    this.numScrollsBackground++, 
                                                                    0.05, 175, 250));
     }
@@ -230,10 +232,10 @@ Engine.prototype.animate = function(time) {
         context.closePath();
         context.clip();
         //draw background images
-        context.translate(this.offsetBackground, 0);
+        context.translate(this.offsetBackground - this.groundImgWidth, 0);
         for(i in this.imgsBackground)
         {
-            context.translate(i * getWidth() / this.numGroundImgs, 0);
+            context.translate(this.groundImgWidth, 0);
             context.drawImage(this.imgsBackground[i].getImage(), 0, 0);
         }
     context.restore();
@@ -264,10 +266,10 @@ Engine.prototype.animate = function(time) {
         }
         context.clip();
         //draw foreground images
-        context.translate(this.offsetForeground, 0);
-        for(i in this.imgsForeground)
+        context.translate(this.offsetForeground - this.groundImgWidth, 0);
+        for(var i = 0; i < this.imgsForeground.length; i++)
         {
-            context.translate(i * getWidth() / this.numGroundImgs, 0);
+            context.translate(this.groundImgWidth, 0);
             context.drawImage(this.imgsForeground[i].getImage(), 0, 0);
         }
     context.restore();
