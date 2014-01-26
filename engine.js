@@ -476,56 +476,100 @@ Engine.prototype.checkColourCollisions = function() {
 };
 
 Engine.prototype.checkFalling = function(t) {
-    // determine two points around the char to determine the line segment
-    var leftPt, rightPt;
-
-    var gp;
-    for (var i = 0; i < this.groundPolys.length; i++)
-    {
-        gp = this.groundPolys[i];
-        for(var j = 0; j < gp.u.length; j++)
-        {
-            if (gp.u[j].x < this.char.x) leftPt = gp.u[j];
-            
-            if (gp.u[j].x > this.char.x) {
-                rightPt = gp.u[j];
-                break;
-            }
-        }
-    }
     
-    if(!rightPt) return;
-    // determine how far away the char is from the line, and whether falling or climbing
-    var slope = (rightPt.y - leftPt.y) / (rightPt.x - leftPt.x);
-    var dx = this.char.x - leftPt.x;
-    var d = t*this.gravity / 1000; // how far the char would fall with gravity on this frame;
-    var distFromLine = (slope*dx + leftPt.y) - (this.char.y + 50);
+    var groundHeight = this.getGroundIntersect(this.char.x, this.char.y - 50),
+        dY = t * this.gravity * 0.001;
+    var dist = groundHeight - this.char.y - 50;
     
-    if (rightPt.damage && leftPt.damage && distFromLine < 5) {
-        //this.falling = null;
+    //look for damage
+    if (this.getGroundDamage(this.char.x) && dist < 5) {
         if (this.timeSinceLastDamage > 1000) {
             //this.char.hp --;
             this.timeSinceLastDamage = 0;
         }
     } 
-    if ( distFromLine > d && !this.char.falling) {
-        //console.log("Char needs to fall now");
-        this.char.falling = true;
-        this.char.jumpV = 0;
-        this.char.climbBy = null;
-    } else if ((slope*dx + leftPt.y) > this.char.y + 50) {
-        this.char.climbBy = (slope*dx + leftPt.y) - this.char.y - 50;;
-        this.falling = null;
-    } else if((slope*dx + leftPt.y) < this.char.y + 50) {
-        this.char.climbBy = (slope*dx + leftPt.y) - this.char.y - 50;
-        this.char.falling = null;
-    } else {
+    
+    if ( dist > dY ) 
+    {
+        if(!this.char.falling)
+        {
+            this.char.falling = true;
+            this.char.jumpV = 0;
+            this.char.climbBy = null;
+        }
+    } 
+    else if (groundHeight > this.char.y + 50) 
+    {
+        this.char.climbBy = groundHeight - this.char.y - 50;
+        this.char.falling = false;
+    } 
+    else if(groundHeight < this.char.y + 50) 
+    {
+        this.char.climbBy = groundHeight - this.char.y - 50;
+        this.char.falling = false;
+    } 
+    else 
+    {
         this.char.falling = false;
         this.char.climbBy = null;
     }  
 };
 
-Engine.prototype.getGroundIntersect = function(x)
+Engine.prototype.getGroundIntersect = function(x, yThresh)
+{
+    if(typeof(yThresh) == 'undefined') yThresh = 0;
+    
+    if( x < 0 ) return this.groundPolys[0].u[0].y;
+    while( x > this.groundPolys[0].lastUpper.x)
+    {
+        var newPoly = this.groundPolys[0].extend(this.cG, this.distance, this.speed, this.gravity);
+        if (newPoly) {
+            this.groundPolys.push(newPoly);
+        }
+    }
+    
+    //find points around x value
+    var l = null,
+        r = null,
+        m, b, d,
+        current = null,
+        curDist = Number.MAX_VALUE;
+    
+    var gp;
+    findloop:
+    for (var i = this.groundPolys.length-1; i >= 0; --i)
+    {
+        gp = this.groundPolys[i];
+        for(var j = 1; j < gp.u.length; j++)
+        {
+            if (gp.u[j].x > x && gp.u[j-1].x < x ) 
+            {
+                l = gp.u[j-1];
+                r = gp.u[j];
+                
+                m = (r.y - l.y) / (r.x - l.x);  
+                b = l.y - m * l.x;
+                yVal = m * x + b;
+                
+                if(yVal > yThresh)
+                {
+                    d = yVal - yThresh;
+                    if( d < curDist )
+                    {
+                        curDist = d;
+                        current = yVal;
+                    }
+                }
+            }
+        }
+    }
+    console.clear();
+    console.log(current);
+    return current || getWidth() * 0.5;
+
+}
+
+Engine.prototype.getGroundDamage = function(x)
 {
     if( x < 0 ) return this.groundPolys[0].u[0].y;
     while( x > this.groundPolys[0].lastUpper.x)
@@ -541,39 +585,40 @@ Engine.prototype.getGroundIntersect = function(x)
         r = null;
     
     var gp;
+    findloop:
     for (var i = this.groundPolys.length-1; i >= 0; --i)
     {
         gp = this.groundPolys[i];
-        for(var j = 0; j < gp.u.length; j++)
+        for(var j = 1; j < gp.u.length; j++)
         {
-            if (gp.u[j].x > x && j > 0 ) 
+            if (gp.u[j].x > x && gp.u[j-1].x < x ) 
             {
                 l = gp.u[j-1];
                 r = gp.u[j];
-                break;
+                break findloop;
             }
         }
     }
     
     if(l == null || r == null)
     {
-        debugger;
+        return false;
     }
-    else
+    else if(r.damage && l.damage)
     {
-        var m = (r.y - l.y) / (r.x - l.x);
-        var b = l.y - m * l.x;
-
-        return m * x + b;
+        return true;
     }
+    return false
 }
 
 Engine.prototype.drawUI = function(context) {
+    context.save();
     context.font = "30px Arial";
     context.fillStyle = "#000";
     context.textAlign = "left";
     context.fillText(Math.round(this.distance) + "m", 300, 40);
     
+    context.beginPath();
     context.rect(40, 18, 255, 15);
     context.rect(40, 38, 255, 15);
     context.rect(40, 58, 255, 15);
@@ -604,6 +649,7 @@ Engine.prototype.drawUI = function(context) {
     context.lineTo(240, 110);
     context.stroke();
     context.setLineDash([0]);
+    context.restore();
     
     for (var i=0; i < this.char.hp; i++) {
         context.drawImage(this.imgHeart, getWidth() - ( 55 * (i + 1)), 0);
