@@ -75,6 +75,7 @@ Engine.prototype.init = function()
     this.groundPolys.push( new GroundPoly( false ) );
     this.backPoly = new GroundPoly( false );
     
+    this.cG = new chunkGenerator();
     // Handlers //
     // Jump handler
     window.addEventListener('keydown', function(e) {
