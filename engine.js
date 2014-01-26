@@ -16,11 +16,15 @@ var Engine = function(canvasID) {
     this.context.textAlign = "center";
     this.context.fillText("Loading...", getWidth()*0.5, getHeight()*0.5);
     
-    window.requestAnimationFrame(this.init);
+    window.requestAnimationFrame(function () {
+        self.init.call(self);
+    });
 }
  
 Engine.prototype.init = function()
 {
+    var self = this;
+    
     //useful stuff
     this.generator = new Generator();
     
@@ -61,10 +65,12 @@ Engine.prototype.init = function()
     this.timeSinceLastDamage = 0;
     this.colorPickup = null;
     
-    // world variables
-    this.backCoords = [{'x': 0, 'y': getHeight()/2}, {'x': 200, 'y': getHeight()/2 + 50}];
-    this.worldCoords = [{'x': 0, 'y': getHeight()/2, 'damage': false}, {'x': 200, 'y': getHeight()/2 + 50, 'damage': false}];
-    this.platformCoords = [];
+    //new lines
+    this.groundPolys = [];
+    this.groundPolys.push( new GroundPoly( false ) );
+    this.backPoly = new GroundPoly( false );
+    
+    //this.platformCoords = [];
     this.cG = new chunkGenerator();
     
     // Handlers
@@ -90,6 +96,8 @@ Engine.prototype.init = function()
             self.char.defend(self.context);
         }
     });
+    
+    this.start();
 };
 
 Engine.prototype.start = function() {
@@ -173,12 +181,21 @@ Engine.prototype.animate = function(time) {
     // background
     context.save();
         context.beginPath();
-        context.moveTo(this.backCoords[0].x, this.backCoords[0].y);
-        for (var i=1; i < this.backCoords.length; i++) {
-            context.lineTo(this.backCoords[i].x, this.backCoords[i].y);
+    
+        //back thorough upper
+        var bp = this.backPoly;
+        context.moveTo( bp.u[bp.u.length-1].x, bp.u[bp.u.length-1].y );
+        for(var j = bp.u.length-1; j >= 0; --j)
+        {
+            context.lineTo( bp.u[j].x, bp.u[j].y );
         }
-        context.lineTo(context.canvas.width, context.canvas.height);
-        context.lineTo(0, context.canvas.height);
+        
+        //through lower
+        for(var j = 0; j < bp.l.length; ++j)
+        {
+            context.lineTo( bp.l[j].x, bp.l[j].y );
+        }
+
         context.closePath();
         context.clip();
         //draw background images
@@ -190,13 +207,27 @@ Engine.prototype.animate = function(time) {
     // foreground
     context.save();
         context.beginPath();
-        context.moveTo(this.worldCoords[0].x, this.worldCoords[0].y);
-        for (var i=1; i < this.worldCoords.length; i++) {
-            context.lineTo(this.worldCoords[i].x, this.worldCoords[i].y);
+    
+        //new
+        var gp
+        for(var i = 0; i < this.groundPolys.length; i++)
+        {
+            gp = this.groundPolys[i];
+            
+            //back thorough upper
+            context.moveTo( gp.u[gp.u.length-1].x, gp.u[gp.u.length-1].y );
+            for(var j = gp.u.length-1; j >= 0; --j)
+            {
+                context.lineTo( gp.u[j].x, gp.u[j].y );
+            }
+            
+            //through lower
+            for(var j = 0; j < gp.l.length; ++j)
+            {
+                context.lineTo( gp.l[j].x, gp.l[j].y );
+            }
+            context.closePath();
         }
-        context.lineTo(context.canvas.width, context.canvas.height);
-        context.lineTo(0, context.canvas.height);
-        context.closePath();
         context.clip();
         //draw foreground images
         context.translate(this.offsetForeground, 0);
@@ -302,17 +333,42 @@ Engine.prototype.translateWorld = function(t) {
     else if (this.char.climbBy) {
         dY = -this.char.climbBy;
     }
+    
+    //new way
+    var gp;
+    for(var i = 0; i < this.groundPolys.length; ++i)
+    {
+        gp = this.groundPolys[i];
+        
+        //upper
+        for(var j = 0; j < gp.u.length; j++)
+        {
+            gp.u[j].x += dX;
+            gp.u[j].y += dY;
+        }
+        //lower
+        for(var j = 0; j < gp.l.length; j++)
+        {
+            gp.l[j].x += dX;
+            gp.l[j].y += dY;
+        }
+    }
+    
+    //do back polys
+    var bp = this.backPoly;
+    //upper
+    for(var j = 0; j < bp.u.length; j++)
+    {
+        bp.u[j].x += dX;
+        bp.u[j].y += dY;
+    }
+    //lower
+    for(var i = 0; i < bp.l.length; i++)
+    {
+        bp.l[i].x += dX;
+        bp.l[i].y += dY;
+    }
 
-    // translate world according to speed / falling speed
-    for (var i = 0; i < this.worldCoords.length; i++) {
-        this.worldCoords[i].x += dX;
-        this.worldCoords[i].y += dY;
-    }
-    // translate background according to speed / falling speed
-    for (var i = 0; i < this.backCoords.length; i++) {
-        this.backCoords[i].x += dX * 0.3;
-        this.backCoords[i].y += dY * 0.3;
-    }
     // translate colorPickup
     if (this.colorPickup) {
         this.colorPickup.x += dX;
@@ -323,31 +379,40 @@ Engine.prototype.translateWorld = function(t) {
 };
 
 Engine.prototype.updateWorld = function() {
-    // get rid of old coords
-    if (this.worldCoords[1].x < 0) {
-        this.worldCoords.splice(0,1);
+    
+    //new way
+    var gp;
+    for(var i = 0; i < this.groundPolys.length; ++i)
+    {
+        gp = this.groundPolys[i];
+        
+        //add new
+        while( gp.lastUpper.x < getWidth() )
+        {
+            gp.extend();
+        }
+        
+        //remove old
+        if( gp.u[1].x < 0 )
+            gp.u.splice(0, 1);
+        if( gp.l[1].x < 0 )
+            gp.l.splice(0, 1);
+        
     }
-    if (this.backCoords[1].x < 0) {
-        this.backCoords.splice(0,1);
+
+    //back polys
+    var bp = this.backPoly;
+    //add new
+    while( bp.lastUpper.x < getWidth() )
+    {
+        bp.extend();
     }
-    if (this.colorPickup && this.colorPickup.x < -this.colorPickup.radius) {
-        this.colorPickup = null;
-    }
-    // add a new world chunk if needed
-    var lastCoord = this.worldCoords[this.worldCoords.length - 1];
-    if (lastCoord.x < getWidth()) {
-        var newChunk = this.cG.generateChunk(lastCoord, this.r, this.g, this.b, this.distance, this.speed, this.gravity);
-        for (var i=0; i < newChunk.length; i++)
-            this.worldCoords.push(newChunk[i]);   
-    }
-    // add a new back point if needed
-    var lastBackCoord = this.backCoords[this.backCoords.length - 1];
-    if (lastBackCoord.x < getWidth()) {
-        this.backCoords.push({
-            x: lastBackCoord.x + 200, 
-            y: lastCoord.y - 0.1 * getHeight() - 0.5 * getHeight() * Math.random()
-        });
-    }
+    //remove old
+    if( bp.u[1].x < 0 )
+        bp.u.splice(0, 1);
+    if( bp.l[1].x < 0 )
+        bp.l.splice(0, 1);
+    
     // generate a colour Pickup maybe
     if (!this.colorPickup && Math.random()*10000 + 4000 < this.timeSinceLastColor) {
         var typeRNG = Math.random();
@@ -391,12 +456,19 @@ Engine.prototype.checkColourCollisions = function() {
 Engine.prototype.checkFalling = function(t) {
     // determine two points around the char to determine the line segment
     var leftPt, rightPt;
-    for (var i = 0; i < this.worldCoords.length; i++) {
-        if (this.worldCoords[i].x < this.char.x) leftPt = this.worldCoords[i];
-        
-        if (this.worldCoords[i].x > this.char.x) {
-            rightPt = this.worldCoords[i];
-            break;
+
+    var gp;
+    for (var i = 0; i < this.groundPolys.length; i++)
+    {
+        gp = this.groundPolys[i];
+        for(var j = 0; j < gp.u.length; j++)
+        {
+            if (gp.u[j].x < this.char.x) leftPt = gp.u[j];
+            
+            if (gp.u[j].x > this.char.x) {
+                rightPt = gp.u[j];
+                break;
+            }
         }
     }
     
@@ -433,28 +505,31 @@ Engine.prototype.checkFalling = function(t) {
 
 Engine.prototype.getGroundIntersect = function(x)
 {
-    if( x < 0 ) this.worldCoords[0].y;
-    while( x > this.worldCoords[this.worldCoords.length-1].x)
+    if( x < 0 ) return this.groundPolys[0].u[0].y;
+    while( x > this.groundPolys[0].lastUpper.x)
     {
-        var newChunk = this.cG.generateChunk(this.worldCoords[this.worldCoords.length-1], 
-                                             this.r, this.g, this.b, 
-                                             this.distance, this.speed, this.gravity);
-        for (var i=0; i < newChunk.length; i++)
-            this.worldCoords.push(newChunk[i]);
+        this.groundPolys[0].extend();
     }
     
     //find points around x value
     var l = null,
         r = null;
-    for (var i = 0; i < this.worldCoords.length; i++) 
+    
+    var gp;
+    for (var i = this.groundPolys.length-1; i >= 0; --i)
     {
-        if (this.worldCoords[i].x > x && i > 0 ) 
+        gp = this.groundPolys[i];
+        for(var j = 0; j < gp.u.length; j++)
         {
-            l = this.worldCoords[i-1];
-            r = this.worldCoords[i];
-            break;
+            if (gp.u[j].x > x && j > 0 ) 
+            {
+                l = gp.u[j-1];
+                r = gp.u[j];
+                break;
+            }
         }
     }
+    
     if(l == null || r == null)
     {
         debugger;
