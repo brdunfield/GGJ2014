@@ -273,11 +273,8 @@ Engine.prototype.animate = function(time) {
         };
     };
     //remove shieldsshields
-    if(this.char.shields.length > 3){
-        this.char.shields.splice(0, 1);
-    }else if(this.char.shields.length > 0){
+    if(this.char.shields.length > 0){
         if(this.char.shields[0].particles.length >= this.char.shields[0].maxParticles-1){
-            console.log("KILL A SHIELD");
             this.char.shields.splice(0, 1);
         }
     }
