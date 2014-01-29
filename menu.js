@@ -64,4 +64,5 @@ function loadNext(){
 function switchEntry(){
     $("#title").empty();
     $("#title").append($("#textbox").val());
+    document.title = $("#textbox").val();
 }
